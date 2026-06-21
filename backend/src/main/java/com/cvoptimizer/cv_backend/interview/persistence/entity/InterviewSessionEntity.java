@@ -35,6 +35,9 @@ public class InterviewSessionEntity {
     private Instant createdAt;
     private Instant endedAt;
 
+    @Column(columnDefinition = "TEXT")
+    private String sessionState;
+
     public enum SessionStatus {
         IN_PROGRESS,
         PASSED,
@@ -74,6 +77,9 @@ public class InterviewSessionEntity {
 
     public Instant getEndedAt() { return endedAt; }
     public void setEndedAt(Instant endedAt) { this.endedAt = endedAt; }
+
+    public String getSessionState() { return sessionState; }
+    public void setSessionState(String sessionState) { this.sessionState = sessionState; }
 
     public String getUserId() {
         return userId;
