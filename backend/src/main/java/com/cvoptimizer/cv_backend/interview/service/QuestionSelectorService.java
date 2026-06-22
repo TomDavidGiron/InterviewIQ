@@ -20,7 +20,10 @@ public class QuestionSelectorService {
 
         Set<String> safeSkills = (jobSkills == null) ? Set.of() : jobSkills;
 
-        List<InterviewQuestion> ranked = bank.stream()
+        List<InterviewQuestion> shuffled = new ArrayList<>(bank);
+        Collections.shuffle(shuffled);
+
+        List<InterviewQuestion> ranked = shuffled.stream()
                 .sorted((a, b) -> Integer.compare(score(b, safeSkills), score(a, safeSkills)))
                 .collect(Collectors.toList());
 
