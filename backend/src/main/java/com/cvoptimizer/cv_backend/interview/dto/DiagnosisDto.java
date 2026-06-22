@@ -1,29 +1,22 @@
 package com.cvoptimizer.cv_backend.interview.dto;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class DiagnosisDto {
 
     private String overallAssessment;
     private int overallScore;
+    private List<String> primaryWeakAreas = new ArrayList<>();
+    private List<String> criticalIssues = new ArrayList<>();
+    private List<String> suggestedStudyPlan = new ArrayList<>();
 
-    private List<String> primaryWeakAreas;
-    private List<String> criticalIssues;
-    private List<String> suggestedStudyPlan;
+    // Phase 6 additions
+    private String targetRole;
+    private Integer jobFitScore;
+    private List<String> jobCriticalWeakAreas = new ArrayList<>();
 
     public DiagnosisDto() {
-    }
-
-    public DiagnosisDto(String overallAssessment,
-                        int overallScore,
-                        List<String> primaryWeakAreas,
-                        List<String> criticalIssues,
-                        List<String> suggestedStudyPlan) {
-        this.overallAssessment = overallAssessment;
-        this.overallScore = overallScore;
-        this.primaryWeakAreas = primaryWeakAreas;
-        this.criticalIssues = criticalIssues;
-        this.suggestedStudyPlan = suggestedStudyPlan;
     }
 
     public String getOverallAssessment() {
@@ -47,7 +40,7 @@ public class DiagnosisDto {
     }
 
     public void setPrimaryWeakAreas(List<String> primaryWeakAreas) {
-        this.primaryWeakAreas = primaryWeakAreas;
+        this.primaryWeakAreas = primaryWeakAreas != null ? primaryWeakAreas : new ArrayList<>();
     }
 
     public List<String> getCriticalIssues() {
@@ -55,7 +48,7 @@ public class DiagnosisDto {
     }
 
     public void setCriticalIssues(List<String> criticalIssues) {
-        this.criticalIssues = criticalIssues;
+        this.criticalIssues = criticalIssues != null ? criticalIssues : new ArrayList<>();
     }
 
     public List<String> getSuggestedStudyPlan() {
@@ -63,6 +56,30 @@ public class DiagnosisDto {
     }
 
     public void setSuggestedStudyPlan(List<String> suggestedStudyPlan) {
-        this.suggestedStudyPlan = suggestedStudyPlan;
+        this.suggestedStudyPlan = suggestedStudyPlan != null ? suggestedStudyPlan : new ArrayList<>();
+    }
+
+    public String getTargetRole() {
+        return targetRole;
+    }
+
+    public void setTargetRole(String targetRole) {
+        this.targetRole = targetRole;
+    }
+
+    public Integer getJobFitScore() {
+        return jobFitScore;
+    }
+
+    public void setJobFitScore(Integer jobFitScore) {
+        this.jobFitScore = jobFitScore;
+    }
+
+    public List<String> getJobCriticalWeakAreas() {
+        return jobCriticalWeakAreas;
+    }
+
+    public void setJobCriticalWeakAreas(List<String> jobCriticalWeakAreas) {
+        this.jobCriticalWeakAreas = jobCriticalWeakAreas != null ? jobCriticalWeakAreas : new ArrayList<>();
     }
 }

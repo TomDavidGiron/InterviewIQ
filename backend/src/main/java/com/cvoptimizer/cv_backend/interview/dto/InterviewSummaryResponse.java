@@ -1,156 +1,183 @@
 package com.cvoptimizer.cv_backend.interview.dto;
 
-import com.cvoptimizer.cv_backend.interview.model.InterviewStatus;
-
+import java.util.ArrayList;
 import java.util.List;
 
 public class InterviewSummaryResponse {
 
-    // existing
-    private InterviewStatus status;
-
-    private int totalQuestions;
-    private int answeredCount;
-
-    private int scoreSoFar;
-    private int maxScoreSoFar;
-
-    private int scorePercent; // 0-100
-
-    private QuestionDto lastQuestion;
-
-    private List<TagWeaknessDto> weakTags;
-    private List<String> recommendations;
-
-
-    private int overallScore;          // 0-100 (alias of scorePercent for now)
-    private boolean passed;
-    private String passReason;
-
-    private List<TagBreakdownDto> tagBreakdown;
-    private List<String> strengths;
-    private List<String> weaknesses;
-    private List<String> criticalFailures;
-
+    private String sessionId;
+    private int totalScore;
+    private int maxScore;
+    private double percentage;
+    private String overallScore;
+    private List<String> strengths = new ArrayList<>();
+    private List<String> weaknesses = new ArrayList<>();
+    private List<String> weakTopics = new ArrayList<>();
+    private List<TagBreakdownDto> tagBreakdown = new ArrayList<>();
+    private List<TagWeaknessDto> tagWeaknesses = new ArrayList<>();
     private DiagnosisDto diagnosis;
 
-    public InterviewSummaryResponse() {}
+    // AI Feedback Engine
+    private String studyPlan;
+    private String feedbackSummary;
+    private String feedbackSource;
 
-    public InterviewSummaryResponse(InterviewStatus status,
-                                    int totalQuestions,
-                                    int answeredCount,
-                                    int scoreSoFar,
-                                    int maxScoreSoFar,
-                                    int scorePercent,
-                                    QuestionDto lastQuestion,
-                                    List<TagWeaknessDto> weakTags,
-                                    List<String> recommendations) {
-        this.status = status;
-        this.totalQuestions = totalQuestions;
-        this.answeredCount = answeredCount;
-        this.scoreSoFar = scoreSoFar;
-        this.maxScoreSoFar = maxScoreSoFar;
-        this.scorePercent = scorePercent;
-        this.lastQuestion = lastQuestion;
-        this.weakTags = weakTags;
-        this.recommendations = recommendations;
+    // Phase 6
+    private List<String> matchedJobSkills = new ArrayList<>();
+    private List<String> missingJobSkills = new ArrayList<>();
+    private Integer jobFitScore;
+    private String targetRoleHint;
+    private String targetSeniorityHint;
 
-        // defaults for new fields
-        this.overallScore = scorePercent;
-        this.passed = (status != null && status.name().equals("PASSED"));
-        this.passReason = null;
-        this.tagBreakdown = List.of();
-        this.strengths = List.of();
-        this.weaknesses = List.of();
-        this.criticalFailures = List.of();
-        this.diagnosis = null;
+    public String getSessionId() {
+        return sessionId;
     }
 
-    public InterviewSummaryResponse(InterviewStatus status,
-                                    int totalQuestions,
-                                    int answeredCount,
-                                    int scoreSoFar,
-                                    int maxScoreSoFar,
-                                    int scorePercent,
-                                    QuestionDto lastQuestion,
-                                    List<TagWeaknessDto> weakTags,
-                                    List<String> recommendations,
-                                    int overallScore,
-                                    boolean passed,
-                                    String passReason,
-                                    List<TagBreakdownDto> tagBreakdown,
-                                    List<String> strengths,
-                                    List<String> weaknesses,
-                                    List<String> criticalFailures,
-                                    DiagnosisDto diagnosis) {
-        this.status = status;
-        this.totalQuestions = totalQuestions;
-        this.answeredCount = answeredCount;
-        this.scoreSoFar = scoreSoFar;
-        this.maxScoreSoFar = maxScoreSoFar;
-        this.scorePercent = scorePercent;
-        this.lastQuestion = lastQuestion;
-        this.weakTags = weakTags;
-        this.recommendations = recommendations;
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
+    }
 
+    public int getTotalScore() {
+        return totalScore;
+    }
+
+    public void setTotalScore(int totalScore) {
+        this.totalScore = totalScore;
+    }
+
+    public int getMaxScore() {
+        return maxScore;
+    }
+
+    public void setMaxScore(int maxScore) {
+        this.maxScore = maxScore;
+    }
+
+    public double getPercentage() {
+        return percentage;
+    }
+
+    public void setPercentage(double percentage) {
+        this.percentage = percentage;
+    }
+
+    public String getOverallScore() {
+        return overallScore;
+    }
+
+    public void setOverallScore(String overallScore) {
         this.overallScore = overallScore;
-        this.passed = passed;
-        this.passReason = passReason;
-        this.tagBreakdown = tagBreakdown;
+    }
+
+    public List<String> getStrengths() {
+        return strengths;
+    }
+
+    public void setStrengths(List<String> strengths) {
         this.strengths = strengths;
+    }
+
+    public List<String> getWeaknesses() {
+        return weaknesses;
+    }
+
+    public void setWeaknesses(List<String> weaknesses) {
         this.weaknesses = weaknesses;
-        this.criticalFailures = criticalFailures;
+    }
+
+    public List<String> getWeakTopics() {
+        return weakTopics;
+    }
+
+    public void setWeakTopics(List<String> weakTopics) {
+        this.weakTopics = weakTopics;
+    }
+
+    public List<TagBreakdownDto> getTagBreakdown() {
+        return tagBreakdown;
+    }
+
+    public void setTagBreakdown(List<TagBreakdownDto> tagBreakdown) {
+        this.tagBreakdown = tagBreakdown;
+    }
+
+    public List<TagWeaknessDto> getTagWeaknesses() {
+        return tagWeaknesses;
+    }
+
+    public void setTagWeaknesses(List<TagWeaknessDto> tagWeaknesses) {
+        this.tagWeaknesses = tagWeaknesses;
+    }
+
+    public DiagnosisDto getDiagnosis() {
+        return diagnosis;
+    }
+
+    public void setDiagnosis(DiagnosisDto diagnosis) {
         this.diagnosis = diagnosis;
     }
 
-    public InterviewStatus getStatus() { return status; }
-    public void setStatus(InterviewStatus status) { this.status = status; }
+    public String getStudyPlan() {
+        return studyPlan;
+    }
 
-    public int getTotalQuestions() { return totalQuestions; }
-    public void setTotalQuestions(int totalQuestions) { this.totalQuestions = totalQuestions; }
+    public void setStudyPlan(String studyPlan) {
+        this.studyPlan = studyPlan;
+    }
 
-    public int getAnsweredCount() { return answeredCount; }
-    public void setAnsweredCount(int answeredCount) { this.answeredCount = answeredCount; }
+    public String getFeedbackSummary() {
+        return feedbackSummary;
+    }
 
-    public int getScoreSoFar() { return scoreSoFar; }
-    public void setScoreSoFar(int scoreSoFar) { this.scoreSoFar = scoreSoFar; }
+    public void setFeedbackSummary(String feedbackSummary) {
+        this.feedbackSummary = feedbackSummary;
+    }
 
-    public int getMaxScoreSoFar() { return maxScoreSoFar; }
-    public void setMaxScoreSoFar(int maxScoreSoFar) { this.maxScoreSoFar = maxScoreSoFar; }
+    public String getFeedbackSource() {
+        return feedbackSource;
+    }
 
-    public int getScorePercent() { return scorePercent; }
-    public void setScorePercent(int scorePercent) { this.scorePercent = scorePercent; }
+    public void setFeedbackSource(String feedbackSource) {
+        this.feedbackSource = feedbackSource;
+    }
 
-    public QuestionDto getLastQuestion() { return lastQuestion; }
-    public void setLastQuestion(QuestionDto lastQuestion) { this.lastQuestion = lastQuestion; }
+    public List<String> getMatchedJobSkills() {
+        return matchedJobSkills;
+    }
 
-    public List<TagWeaknessDto> getWeakTags() { return weakTags; }
-    public void setWeakTags(List<TagWeaknessDto> weakTags) { this.weakTags = weakTags; }
+    public void setMatchedJobSkills(List<String> matchedJobSkills) {
+        this.matchedJobSkills = matchedJobSkills;
+    }
 
-    public List<String> getRecommendations() { return recommendations; }
-    public void setRecommendations(List<String> recommendations) { this.recommendations = recommendations; }
+    public List<String> getMissingJobSkills() {
+        return missingJobSkills;
+    }
 
-    public int getOverallScore() { return overallScore; }
-    public void setOverallScore(int overallScore) { this.overallScore = overallScore; }
+    public void setMissingJobSkills(List<String> missingJobSkills) {
+        this.missingJobSkills = missingJobSkills;
+    }
 
-    public boolean isPassed() { return passed; }
-    public void setPassed(boolean passed) { this.passed = passed; }
+    public Integer getJobFitScore() {
+        return jobFitScore;
+    }
 
-    public String getPassReason() { return passReason; }
-    public void setPassReason(String passReason) { this.passReason = passReason; }
+    public void setJobFitScore(Integer jobFitScore) {
+        this.jobFitScore = jobFitScore;
+    }
 
-    public List<TagBreakdownDto> getTagBreakdown() { return tagBreakdown; }
-    public void setTagBreakdown(List<TagBreakdownDto> tagBreakdown) { this.tagBreakdown = tagBreakdown; }
+    public String getTargetRoleHint() {
+        return targetRoleHint;
+    }
 
-    public List<String> getStrengths() { return strengths; }
-    public void setStrengths(List<String> strengths) { this.strengths = strengths; }
+    public void setTargetRoleHint(String targetRoleHint) {
+        this.targetRoleHint = targetRoleHint;
+    }
 
-    public List<String> getWeaknesses() { return weaknesses; }
-    public void setWeaknesses(List<String> weaknesses) { this.weaknesses = weaknesses; }
+    public String getTargetSeniorityHint() {
+        return targetSeniorityHint;
+    }
 
-    public List<String> getCriticalFailures() { return criticalFailures; }
-    public void setCriticalFailures(List<String> criticalFailures) { this.criticalFailures = criticalFailures; }
-
-    public DiagnosisDto getDiagnosis() { return diagnosis; }
-    public void setDiagnosis(DiagnosisDto diagnosis) { this.diagnosis = diagnosis; }
+    public void setTargetSeniorityHint(String targetSeniorityHint) {
+        this.targetSeniorityHint = targetSeniorityHint;
+    }
 }
