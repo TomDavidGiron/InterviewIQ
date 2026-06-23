@@ -1,93 +1,175 @@
 package com.cvoptimizer.cv_backend.service;
 
+import com.cvoptimizer.cv_backend.interview.dto.JobDescriptionAnalysis;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 public class JobSkillExtractorService {
 
-    private static final Map<String, String> SYNONYMS = Map.ofEntries(
-            Map.entry("js", "javascript"),
-            Map.entry("ts", "typescript"),
-            Map.entry("golang", "go"),
-            Map.entry("pgsql", "postgresql"),
-            Map.entry("postgres", "postgresql"),
-            Map.entry("restful", "rest"),
-            Map.entry("rest api", "rest"),
-            Map.entry("micro-service", "microservices"),
-            Map.entry("micro-services", "microservices"),
-            Map.entry("ci", "ci/cd"),
-            Map.entry("cd", "ci/cd")
+    private static final Map<String, List<String>> WORD_BANK = new LinkedHashMap<>();
+    private static final List<String> MUST_HAVE_HINTS = List.of(
+            "must have", "required", "requirements", "you have", " חובה ", "נדרש", "required qualifications"
+    );
+    private static final List<String> NICE_TO_HAVE_HINTS = List.of(
+            "nice to have", "preferred", "bonus", "advantage", "יתרון", "preferred qualifications"
     );
 
-    private static final Set<String> WORD_BANK = new HashSet<>(List.of(
-            // Backend core
-            "java", "spring", "spring boot", "hibernate",
-            "rest", "graphql", "api",
-            "microservices", "oop", "design patterns",
+    static {
+        WORD_BANK.put("Java", List.of("java"));
+        WORD_BANK.put("Spring Boot", List.of("spring boot", "springboot"));
+        WORD_BANK.put("SQL", List.of("sql", "postgresql", "mysql", "relational database"));
+        WORD_BANK.put("PostgreSQL", List.of("postgresql", "postgres"));
+        WORD_BANK.put("Docker", List.of("docker", "containers", "containerization"));
+        WORD_BANK.put("Redis", List.of("redis", "cache", "caching"));
+        WORD_BANK.put("REST", List.of("rest", "rest api", "restful"));
+        WORD_BANK.put("Microservices", List.of("microservices", "distributed systems"));
+        WORD_BANK.put("AWS", List.of("aws", "amazon web services", "ec2", "s3", "lambda"));
+        WORD_BANK.put("Concurrency", List.of("concurrency", "multithreading", "thread safety", "parallelism"));
+        WORD_BANK.put("System Design", List.of("system design", "scalability", "high availability"));
+        WORD_BANK.put("Security", List.of("security", "authentication", "authorization", "oauth", "jwt"));
+        WORD_BANK.put("Testing", List.of("unit testing", "integration testing", "junit", "testing"));
+        WORD_BANK.put("React", List.of("react", "react.js", "frontend"));
+        WORD_BANK.put("JavaScript", List.of("javascript", "js", "typescript", "ts"));
+        WORD_BANK.put("CI/CD", List.of("ci/cd", "ci cd", "pipeline", "github actions", "jenkins"));
+        WORD_BANK.put("Kubernetes", List.of("kubernetes", "k8s"));
+        WORD_BANK.put("Message Queues", List.of("kafka", "rabbitmq", "message queue", "messaging"));
+    }
 
-            // Databases
-            "sql", "postgresql", "mysql", "mongodb", "redis",
-            "nosql", "elasticsearch",
-
-            // DevOps
-            "docker", "kubernetes",
-            "aws", "azure", "gcp",
-            "ci/cd", "jenkins",
-
-            // Backend languages
-            "python", "go", "c#", ".net",
-
-            // Messaging / streaming
-            "kafka", "rabbitmq",
-
-            // Testing
-            "testing", "junit", "mockito", "selenium", "playwright",
-
-            // OS / tooling
-            "linux", "bash", "git", "github",
-
-            // Security / architecture
-            "security", "oauth", "jwt", "concurrency"
-    ));
-
-    public Set<String> extractKeywords(String text) {
+    public Set<String> extractSkills(String text) {
         if (text == null || text.isBlank()) {
-            return Set.of();
+            return Collections.emptySet();
         }
 
         String normalized = normalize(text);
+        Set<String> detected = new LinkedHashSet<>();
 
-        Set<String> result = new HashSet<>();
-        for (String phrase : WORD_BANK) {
-            if (containsPhrase(normalized, phrase)) {
-                result.add(phrase);
+        for (Map.Entry<String, List<String>> entry : WORD_BANK.entrySet()) {
+            String canonical = entry.getKey();
+            for (String variant : entry.getValue()) {
+                if (containsPhrase(normalized, variant)) {
+                    detected.add(canonical);
+                    break;
+                }
             }
         }
 
-        return result;
+        return detected;
+    }
+
+    public JobDescriptionAnalysis analyzeJobDescription(String text) {
+        JobDescriptionAnalysis analysis = new JobDescriptionAnalysis();
+
+        if (text == null || text.isBlank()) {
+            analysis.setNormalizedJobText("");
+            analysis.setRoleHint("general software engineer");
+            analysis.setSeniorityHint("mid");
+            analysis.setDomainHint("general backend");
+            analysis.setPlanningNotes(List.of("Empty job description received."));
+            return analysis;
+        }
+
+        String normalized = normalize(text);
+        analysis.setNormalizedJobText(normalized);
+
+        Set<String> extracted = extractSkills(text);
+        analysis.setExtractedSkills(new ArrayList<>(extracted));
+
+        List<String> mustHave = extractSkillsFromSectionHints(normalized, MUST_HAVE_HINTS);
+        List<String> niceToHave = extractSkillsFromSectionHints(normalized, NICE_TO_HAVE_HINTS);
+
+        if (mustHave.isEmpty()) {
+            mustHave = new ArrayList<>(extracted.stream().limit(5).toList());
+        }
+
+        List<String> remainingNice = new ArrayList<>(niceToHave);
+        remainingNice.removeAll(mustHave);
+
+        analysis.setMustHaveSkills(mustHave);
+        analysis.setNiceToHaveSkills(remainingNice);
+        analysis.setRoleHint(extractRoleHint(normalized));
+        analysis.setSeniorityHint(extractSeniorityHint(normalized));
+        analysis.setDomainHint(extractDomainHint(normalized));
+        analysis.setPlanningNotes(buildPlanningNotes(analysis));
+
+        return analysis;
+    }
+
+    public String extractRoleHint(String normalizedText) {
+        if (normalizedText.contains("backend")) return "backend engineer";
+        if (normalizedText.contains("full stack") || normalizedText.contains("fullstack")) return "fullstack engineer";
+        if (normalizedText.contains("frontend") || normalizedText.contains("front end")) return "frontend engineer";
+        if (normalizedText.contains("platform")) return "platform engineer";
+        if (normalizedText.contains("devops")) return "devops engineer";
+        if (normalizedText.contains("data engineer")) return "data engineer";
+        return "software engineer";
+    }
+
+    public String extractSeniorityHint(String normalizedText) {
+        if (normalizedText.contains("senior") || normalizedText.contains("lead") || normalizedText.contains("staff")) {
+            return "senior";
+        }
+        if (normalizedText.contains("junior") || normalizedText.contains("entry level") || normalizedText.contains("graduate")) {
+            return "junior";
+        }
+        return "mid";
+    }
+
+    public String extractDomainHint(String normalizedText) {
+        if (normalizedText.contains("distributed") || normalizedText.contains("scale") || normalizedText.contains("high throughput")) {
+            return "distributed systems";
+        }
+        if (normalizedText.contains("cloud") || normalizedText.contains("aws") || normalizedText.contains("kubernetes")) {
+            return "cloud infrastructure";
+        }
+        if (normalizedText.contains("payments") || normalizedText.contains("transactions")) {
+            return "payments";
+        }
+        if (normalizedText.contains("data pipeline") || normalizedText.contains("etl")) {
+            return "data systems";
+        }
+        return "general backend";
+    }
+
+    private List<String> extractSkillsFromSectionHints(String normalized, List<String> hints) {
+        boolean containsHint = hints.stream().anyMatch(normalized::contains);
+        if (!containsHint) {
+            return new ArrayList<>();
+        }
+
+        return extractSkills(normalized).stream().limit(5).collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    private List<String> buildPlanningNotes(JobDescriptionAnalysis analysis) {
+        List<String> notes = new ArrayList<>();
+        notes.add("Role hint: " + analysis.getRoleHint());
+        notes.add("Seniority hint: " + analysis.getSeniorityHint());
+        notes.add("Domain hint: " + analysis.getDomainHint());
+
+        if (!analysis.getMustHaveSkills().isEmpty()) {
+            notes.add("Must-have skills detected: " + String.join(", ", analysis.getMustHaveSkills()));
+        }
+
+        if (!analysis.getNiceToHaveSkills().isEmpty()) {
+            notes.add("Nice-to-have skills detected: " + String.join(", ", analysis.getNiceToHaveSkills()));
+        }
+
+        return notes;
     }
 
     private String normalize(String text) {
-        String normalized = text.toLowerCase(Locale.ROOT);
-
-        for (Map.Entry<String, String> e : SYNONYMS.entrySet()) {
-            normalized = normalized.replace(e.getKey(), e.getValue());
-        }
-
-        normalized = normalized
-                .replaceAll("[^a-z0-9\\s/#+.-]", " ")
+        return text.toLowerCase()
+                .replace("\n", " ")
+                .replace("\r", " ")
                 .replaceAll("\\s+", " ")
                 .trim();
-
-        return normalized;
     }
 
     private boolean containsPhrase(String text, String phrase) {
-        String escaped = Pattern.quote(phrase.toLowerCase(Locale.ROOT));
-        String regex = "(^|\\s)" + escaped + "(\\s|$)";
-        return Pattern.compile(regex).matcher(text).find() || text.contains(phrase);
+        String escaped = Pattern.quote(phrase.toLowerCase());
+        return Pattern.compile("\\b" + escaped + "\\b").matcher(text).find();
     }
 }

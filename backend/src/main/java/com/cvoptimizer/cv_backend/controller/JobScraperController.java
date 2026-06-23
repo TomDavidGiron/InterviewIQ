@@ -5,28 +5,31 @@ import com.cvoptimizer.cv_backend.entity.JobDescription;
 import com.cvoptimizer.cv_backend.model.ScraperResult;
 import com.cvoptimizer.cv_backend.repository.JobDescriptionRepository;
 import com.cvoptimizer.cv_backend.scraper.JobScraperRouter;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/scrape")
-@CrossOrigin(origins = "*") // optional for frontend CORS support
+@CrossOrigin(origins = "*")
 public class JobScraperController {
 
-    @Autowired
-    private JobDescriptionRepository jobDescriptionRepository;
+    private final JobDescriptionRepository jobDescriptionRepository;
+    private final JobScraperRouter jobScraperRouter;
+
+    public JobScraperController(JobDescriptionRepository jobDescriptionRepository,
+                                JobScraperRouter jobScraperRouter) {
+        this.jobDescriptionRepository = jobDescriptionRepository;
+        this.jobScraperRouter = jobScraperRouter;
+    }
 
     @GetMapping
     public ScraperResult scrapeJob(@RequestParam("url") String url) {
-        return JobScraperRouter.scrape(url);
+        return jobScraperRouter.scrape(url);
     }
 
     @PostMapping("/manual-input")
     public ScraperResult handleManualInput(@RequestBody ManualJobInputDTO input) {
-        // Save job input to DB
         JobDescription job = new JobDescription();
         job.setTitle(input.getTitle());
         job.setCompany(input.getCompany());
@@ -49,5 +52,4 @@ public class JobScraperController {
     public List<JobDescription> getAllManualJobDescriptions() {
         return jobDescriptionRepository.findAll();
     }
-
 }

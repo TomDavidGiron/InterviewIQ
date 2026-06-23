@@ -1,12 +1,14 @@
 package com.cvoptimizer.cv_backend.scraper;
 
 import com.cvoptimizer.cv_backend.model.ScraperResult;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public class JobScraperRouter {
 
-    public static ScraperResult scrape(String url) {
+    public ScraperResult scrape(String url) {
         if (url.matches(".*/careers/?$")) {
             List<ScraperResult> jobs = MultiJobListingScraper.scrape(url);
             if (!jobs.isEmpty()) {
@@ -17,19 +19,17 @@ public class JobScraperRouter {
             }
         }
 
-        // 🌐 Step 1: Site-specific scrapers
+        // Step 1: Site-specific scrapers
         ScraperResult result;
         if (url.contains("smartrecruiters.com")) {
             result = JsoupSmartRecruitersScraper.scrape(url);
-        } else if (url.contains("linkedin.com")) {
-            result = LinkedInScraper.scrape(url);
-        }else if (url.contains("microsoft.com")) {
+        } else if (url.contains("microsoft.com")) {
             result = MicrosoftScraper.scrape(url);
-        }else {
-            result = GenericScraper.scrape(url);
+        } else {
+            result = PlaywrightScraper.scrape(url);
         }
 
-        // 🤖 Step 2: Fallbacks
+        // Step 2: Fallbacks
         if (isInvalid(result)) {
             result = SeleniumScraper.scrape(url);
         }
@@ -42,7 +42,6 @@ public class JobScraperRouter {
             result = CustomPortalScraper.scrape(url);
         }
 
-        // ✅ Final fallback — generic multi job scraper
         if (isInvalid(result)) {
             List<ScraperResult> jobs = MultiJobListingScraper.scrape(url);
             if (!jobs.isEmpty()) {
@@ -57,7 +56,7 @@ public class JobScraperRouter {
         return result;
     }
 
-    private static boolean isInvalid(ScraperResult result) {
+    private boolean isInvalid(ScraperResult result) {
         if (result == null || result.getDescription() == null) return true;
 
         String desc = result.getDescription().toLowerCase().trim();
