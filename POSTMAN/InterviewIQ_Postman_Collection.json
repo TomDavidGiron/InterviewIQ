@@ -1,0 +1,864 @@
+{
+  "info": {
+    "_postman_id": "b4a49bdf-bc0e-421e-9738-521381dd9b7d",
+    "name": "InterviewIQ Backend Deep Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Deep Postman collection for the uploaded Spring Boot backend. Covers Interview, Job-specific Interview, RAG, Job Scraping and OCR flows. Collection variables are populated automatically where possible."
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "{{baseUrl}}"
+    },
+    {
+      "key": "userId",
+      "value": "{{userId}}"
+    },
+    {
+      "key": "sessionId",
+      "value": ""
+    },
+    {
+      "key": "jobSessionId",
+      "value": ""
+    },
+    {
+      "key": "topic",
+      "value": "java"
+    },
+    {
+      "key": "ragQuery",
+      "value": "What is polymorphism in Java?"
+    },
+    {
+      "key": "jobUrl",
+      "value": "https://jobs.careers.microsoft.com/global/en/job/0000000/sample"
+    },
+    {
+      "key": "answerText",
+      "value": "Polymorphism in Java lets the same interface or parent type represent different implementations. Method overriding is runtime polymorphism and overloading is compile-time polymorphism."
+    },
+    {
+      "key": "jobAnswerText",
+      "value": "I would build the backend with Spring Boot REST APIs, PostgreSQL, Docker, CI/CD, logging, validation, and secure deployment practices."
+    },
+    {
+      "key": "manualJobTitle",
+      "value": "Junior Backend Developer"
+    },
+    {
+      "key": "manualJobCompany",
+      "value": "InterviewIQ Labs"
+    },
+    {
+      "key": "manualJobLocation",
+      "value": "Tel Aviv"
+    },
+    {
+      "key": "ocrImagePath",
+      "value": ""
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (!pm.environment.get('baseUrl')) { pm.environment.set('baseUrl', 'http://localhost:8080'); }",
+          "if (!pm.environment.get('userId')) { pm.environment.set('userId', 'postman-user-1'); }",
+          "if (!pm.environment.get('topic')) { pm.environment.set('topic', 'java'); }",
+          "if (!pm.environment.get('ragQuery')) { pm.environment.set('ragQuery', 'What is polymorphism in Java?'); }"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "00 - Setup & Smoke",
+      "description": "Basic endpoints to verify the API is up and returning expected shapes.",
+      "item": [
+        {
+          "name": "Get Interview Topics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Returns available interview topics from the question bank.",
+            "url": {
+              "raw": "{{baseUrl}}/api/interview/topics",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "interview",
+                "topics"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const data = pm.response.json();",
+                  "pm.test('Topics is an array', function () { pm.expect(data).to.be.an('array'); });",
+                  "pm.test('Topics array is not empty', function () { pm.expect(data.length).to.be.above(0); });",
+                  "pm.environment.set('detectedTopic', data[0]);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "RAG Search",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Searches knowledge chunks using the RAG pipeline.",
+            "url": {
+              "raw": "{{baseUrl}}/api/rag/search",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "rag",
+                "search"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"{{ragQuery}}\",\n  \"limit\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const data = pm.response.json();",
+                  "pm.test('query field exists', function () { pm.expect(data).to.have.property('query'); });",
+                  "pm.test('chunks is an array', function () { pm.expect(data.chunks).to.be.an('array'); });",
+                  "pm.test('context is an array', function () { pm.expect(data.context).to.be.an('array'); });",
+                  "if (data.chunks.length > 0) {",
+                  "  pm.test('first chunk has required fields', function () {",
+                  "    const c = data.chunks[0];",
+                  "    pm.expect(c).to.have.property('content');",
+                  "    pm.expect(c).to.have.property('topic');",
+                  "    pm.expect(c).to.have.property('similarity');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "01 - Job Scraping",
+      "description": "Manual-input endpoints are deterministic and ideal for deep testing. URL scraping is included as optional because it depends on the external website.",
+      "item": [
+        {
+          "name": "Create Manual Job Input",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Creates a manual job description entry and returns it as ScraperResult.",
+            "url": {
+              "raw": "{{baseUrl}}/api/scrape/manual-input",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scrape",
+                "manual-input"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"{{manualJobTitle}}\",\n  \"company\": \"{{manualJobCompany}}\",\n  \"location\": \"{{manualJobLocation}}\",\n  \"description\": \"Build and maintain backend APIs with Spring Boot, PostgreSQL, Docker and REST best practices.\",\n  \"requirements\": [\n    \"Java\",\n    \"Spring Boot\",\n    \"SQL\",\n    \"Docker\",\n    \"REST APIs\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const data = pm.response.json();",
+                  "pm.test('manual job title matches', function () { pm.expect(data.title).to.eql(pm.variables.replaceIn('{{manualJobTitle}}')); });",
+                  "pm.test('requirements is a non-empty array', function () { pm.expect(data.requirements).to.be.an('array').that.is.not.empty; });",
+                  "pm.environment.set('latestManualJobTitle', data.title);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Manual Job Inputs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Fetches all saved manual job descriptions.",
+            "url": {
+              "raw": "{{baseUrl}}/api/scrape/manual-inputs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scrape",
+                "manual-inputs"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const data = pm.response.json();",
+                  "pm.test('manual inputs is an array', function () { pm.expect(data).to.be.an('array'); });",
+                  "pm.test('at least one manual input exists', function () { pm.expect(data.length).to.be.above(0); });",
+                  "const expectedTitle = pm.environment.get('latestManualJobTitle') || pm.variables.replaceIn('{{manualJobTitle}}');",
+                  "pm.test('created manual job can be found in list', function () {",
+                  "  const found = data.some(x => x.title === expectedTitle);",
+                  "  pm.expect(found).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Scrape Job By URL (Optional)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Optional external-site test. This may fail if the target page is unavailable or blocks scraping.",
+            "url": {
+              "raw": "{{baseUrl}}/api/scrape?url={{jobUrl}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scrape"
+              ],
+              "query": [
+                {
+                  "key": "url",
+                  "value": "{{jobUrl}}"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200 or 500 depending on external target', function () {",
+                  "  pm.expect([200,500]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  pm.test('scrape result has basic shape', function () {",
+                  "    pm.expect(data).to.have.property('title');",
+                  "    pm.expect(data).to.have.property('description');",
+                  "    pm.expect(data).to.have.property('requirements');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 - Regular Interview Flow",
+      "description": "Deep end-to-end interview test using topic mode, then answer, summary, details, history and skill graph checks.",
+      "item": [
+        {
+          "name": "Start Interview",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Starts a regular interview based on topic only.",
+            "url": {
+              "raw": "{{baseUrl}}/api/interview/start",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "interview",
+                "start"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceType\": null,\n  \"payload\": \"\",\n  \"topic\": \"{{topic}}\",\n  \"userId\": \"{{userId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const data = pm.response.json();",
+                  "pm.test('sessionId exists', function () { pm.expect(data.sessionId).to.be.a('string').and.not.empty; });",
+                  "pm.test('firstQuestion exists', function () { pm.expect(data.firstQuestion).to.be.an('object'); });",
+                  "pm.test('firstQuestion has id and text', function () {",
+                  "  pm.expect(data.firstQuestion.id).to.be.a('string');",
+                  "  pm.expect(data.firstQuestion.text).to.be.a('string');",
+                  "});",
+                  "pm.environment.set('sessionId', data.sessionId);",
+                  "pm.collectionVariables.set('sessionId', data.sessionId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Answer Current Interview Question",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Answers the current question in the active regular interview session.",
+            "url": {
+              "raw": "{{baseUrl}}/api/interview/{{sessionId}}/answer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "interview",
+                "{{sessionId}}",
+                "answer"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"answerText\": \"{{answerText}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const data = pm.response.json();",
+                  "pm.test('status exists', function () { pm.expect(data.status).to.be.a('string'); });",
+                  "pm.test('questionIndex and totalQuestions exist', function () {",
+                  "  pm.expect(data.questionIndex).to.be.a('number');",
+                  "  pm.expect(data.totalQuestions).to.be.a('number');",
+                  "});",
+                  "pm.test('currentQuestion exists', function () { pm.expect(data.currentQuestion).to.be.an('object'); });",
+                  "pm.test('evaluation metadata exists', function () {",
+                  "  pm.expect(data).to.have.property('scoreSoFar');",
+                  "  pm.expect(data).to.have.property('maxScoreSoFar');",
+                  "});",
+                  "pm.test('agent trace exists', function () {",
+                  "  pm.expect(data).to.have.property('agentAction');",
+                  "  pm.expect(data).to.have.property('agentReason');",
+                  "});",
+                  "if (data.status === 'IN_PROGRESS') {",
+                  "  pm.test('next question exists while interview is in progress', function () {",
+                  "    pm.expect(data.question).to.be.an('object');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Interview Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Returns current or final summary for the session.",
+            "url": {
+              "raw": "{{baseUrl}}/api/interview/{{sessionId}}/summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "interview",
+                "{{sessionId}}",
+                "summary"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const data = pm.response.json();",
+                  "pm.test('summary has score fields', function () {",
+                  "  pm.expect(data).to.have.property('totalScore');",
+                  "  pm.expect(data).to.have.property('maxScore');",
+                  "  pm.expect(data).to.have.property('percentage');",
+                  "  pm.expect(data).to.have.property('overallScore');",
+                  "});",
+                  "pm.test('summary has strengths and weaknesses arrays', function () {",
+                  "  pm.expect(data.strengths).to.be.an('array');",
+                  "  pm.expect(data.weaknesses).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Interview Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Returns persisted attempt details for the session.",
+            "url": {
+              "raw": "{{baseUrl}}/api/interview/{{sessionId}}/details",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "interview",
+                "{{sessionId}}",
+                "details"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const data = pm.response.json();",
+                  "pm.test('details is an array', function () { pm.expect(data).to.be.an('array'); });",
+                  "if (data.length > 0) {",
+                  "  pm.test('first detail includes question and score info', function () {",
+                  "    pm.expect(data[0]).to.have.property('questionText');",
+                  "    pm.expect(data[0]).to.have.property('earnedPoints');",
+                  "    pm.expect(data[0]).to.have.property('maxPoints');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Interview History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Returns paginated interview history.",
+            "url": {
+              "raw": "{{baseUrl}}/api/interview/history?page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "interview",
+                "history"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const data = pm.response.json();",
+                  "pm.test('history is an array', function () { pm.expect(data).to.be.an('array'); });",
+                  "pm.test('current session appears in history eventually', function () {",
+                  "  const sid = pm.environment.get('sessionId');",
+                  "  const found = data.some(x => x.id === sid || x.sessionId === sid);",
+                  "  pm.expect(found).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Skill Graph By Session",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Returns skill graph calculated from the session.",
+            "url": {
+              "raw": "{{baseUrl}}/api/interview/{{sessionId}}/skill-graph",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "interview",
+                "{{sessionId}}",
+                "skill-graph"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const data = pm.response.json();",
+                  "pm.test('skill graph has expected fields', function () {",
+                  "  pm.expect(data).to.have.property('userId');",
+                  "  pm.expect(data).to.have.property('overallAverage');",
+                  "  pm.expect(data).to.have.property('skills');",
+                  "});",
+                  "pm.test('skills is an array', function () { pm.expect(data.skills).to.be.an('array'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Skill Graph By User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Returns aggregated skill graph for the user.",
+            "url": {
+              "raw": "{{baseUrl}}/api/interview/users/{{userId}}/skill-graph",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "interview",
+                "users",
+                "{{userId}}",
+                "skill-graph"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const data = pm.response.json();",
+                  "pm.test('userId matches request', function () { pm.expect(data.userId).to.eql(pm.variables.replaceIn('{{userId}}')); });",
+                  "pm.test('strongestSkills and weakestSkills arrays exist', function () {",
+                  "  pm.expect(data.strongestSkills).to.be.an('array');",
+                  "  pm.expect(data.weakestSkills).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 - Job-Specific Interview Flow",
+      "description": "Starts an interview from pasted job text so it is deterministic and does not depend on external scraping.",
+      "item": [
+        {
+          "name": "Start Job-Specific Interview (TEXT payload)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Starts a job-specific interview using pasted job description text.",
+            "url": {
+              "raw": "{{baseUrl}}/api/interview/job-specific",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "interview",
+                "job-specific"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceType\": \"TEXT\",\n  \"payload\": \"We are hiring a Junior Backend Developer. Requirements: Java, Spring Boot, SQL, REST APIs, Docker, Git. Nice to have: AWS and CI/CD.\",\n  \"topic\": \"backend\",\n  \"userId\": \"{{userId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const data = pm.response.json();",
+                  "pm.test('job-specific sessionId exists', function () { pm.expect(data.sessionId).to.be.a('string').and.not.empty; });",
+                  "pm.test('firstQuestion exists', function () { pm.expect(data.firstQuestion).to.be.an('object'); });",
+                  "pm.environment.set('jobSessionId', data.sessionId);",
+                  "pm.collectionVariables.set('jobSessionId', data.sessionId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Answer Job-Specific Interview Question",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Answers the current question in the active job-specific session.",
+            "url": {
+              "raw": "{{baseUrl}}/api/interview/{{jobSessionId}}/answer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "interview",
+                "{{jobSessionId}}",
+                "answer"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"answerText\": \"{{jobAnswerText}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const data = pm.response.json();",
+                  "pm.test('status exists', function () { pm.expect(data.status).to.be.a('string'); });",
+                  "pm.test('agentAction exists', function () { pm.expect(data.agentAction).to.be.a('string'); });",
+                  "pm.test('weakTags exists', function () { pm.expect(data).to.have.property('weakTags'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Job-Specific Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Checks summary enrichment for job-specific interviews.",
+            "url": {
+              "raw": "{{baseUrl}}/api/interview/{{jobSessionId}}/summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "interview",
+                "{{jobSessionId}}",
+                "summary"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const data = pm.response.json();",
+                  "pm.test('summary has job-fit related fields', function () {",
+                  "  pm.expect(data).to.have.property('matchedJobSkills');",
+                  "  pm.expect(data).to.have.property('missingJobSkills');",
+                  "});",
+                  "pm.test('job skill fields are arrays', function () {",
+                  "  pm.expect(data.matchedJobSkills).to.be.an('array');",
+                  "  pm.expect(data.missingJobSkills).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 - OCR (Optional Manual Test)",
+      "description": "Requires a real image file and local Tesseract installation according to the backend code path.",
+      "item": [
+        {
+          "name": "Upload Image For OCR (Optional)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "description": "Manual OCR upload. In Postman Body > form-data, keep key name as file and choose an image. Backend expects local Tesseract on Windows path C:\\Program Files\\Tesseract-OCR\\tessdata.",
+            "url": {
+              "raw": "{{baseUrl}}/api/image-upload",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "image-upload"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "{{ocrImagePath}}"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200 or 500 depending on Tesseract/file setup', function () {",
+                  "  pm.expect([200,500]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  pm.test('OCR response is text', function () { pm.expect(pm.response.text()).to.be.a('string'); });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

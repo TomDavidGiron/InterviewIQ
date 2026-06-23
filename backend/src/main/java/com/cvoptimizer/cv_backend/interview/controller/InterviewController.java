@@ -3,8 +3,11 @@ package com.cvoptimizer.cv_backend.interview.controller;
 import com.cvoptimizer.cv_backend.interview.dto.*;
 import com.cvoptimizer.cv_backend.interview.service.InterviewEngineService;
 import com.cvoptimizer.cv_backend.interview.service.InterviewHistoryService;
+import com.cvoptimizer.cv_backend.interview.skillgraph.dto.SkillGraphResponse;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import com.cvoptimizer.cv_backend.interview.service.SkillGraphService;
 
 import java.util.List;
 
@@ -15,19 +18,35 @@ public class InterviewController {
 
     private final InterviewEngineService engine;
     private final InterviewHistoryService history;
+    private final SkillGraphService skillGraphService;
 
-    public InterviewController(InterviewEngineService engine, InterviewHistoryService history) {
+    public InterviewController(InterviewEngineService engine, InterviewHistoryService history, SkillGraphService skillGraphService) {
         this.engine = engine;
         this.history = history;
+        this.skillGraphService = skillGraphService;
+    }
+
+    @GetMapping("/users/{userId}/skill-graph")
+    public ResponseEntity<SkillGraphResponse> skillGraphByUser(@PathVariable String userId) {
+        return ResponseEntity.ok(skillGraphService.getSkillGraph(userId));
+    }
+
+    @GetMapping("/{sessionId}/skill-graph")
+    public ResponseEntity<SkillGraphResponse> skillGraphBySession(@PathVariable String sessionId) {
+        return ResponseEntity.ok(skillGraphService.getSkillGraphBySessionId(sessionId));
     }
 
     @PostMapping("/start")
-    public ResponseEntity<InterviewStartResponse> start(@RequestBody InterviewStartRequest request) {
+    public ResponseEntity<InterviewStartResponse> start(@RequestBody InterviewStartRequest request,
+                                                        Authentication authentication) {
+        request.setUserId(authentication != null ? authentication.getName() : "anonymous");
         return ResponseEntity.ok(engine.start(request));
     }
 
     @PostMapping("/job-specific")
-    public ResponseEntity<InterviewStartResponse> startJobSpecific(@RequestBody InterviewStartRequest request) {
+    public ResponseEntity<InterviewStartResponse> startJobSpecific(@RequestBody InterviewStartRequest request,
+                                                                   Authentication authentication) {
+        request.setUserId(authentication != null ? authentication.getName() : "anonymous");
         return ResponseEntity.ok(engine.startJobSpecificInterview(request));
     }
 
@@ -47,9 +66,11 @@ public class InterviewController {
     @GetMapping("/history")
     public ResponseEntity<List<InterviewHistoryItemDto>> history(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "20") int size,
+            Authentication authentication
     ) {
-        return ResponseEntity.ok(history.getHistory(page, size));
+        String userId = authentication != null ? authentication.getName() : null;
+        return ResponseEntity.ok(history.getHistory(userId, page, size));
     }
 
     @GetMapping("/{sessionId}/details")

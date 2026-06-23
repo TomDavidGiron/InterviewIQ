@@ -1,0 +1,41 @@
+# ===============================
+# Dependencies
+# ===============================
+node_modules/
+frontend/node_modules/
+
+# ===============================
+# Environment files
+# ===============================
+.env
+*.env
+frontend/.env
+
+# ===============================
+# Build artifacts / archives
+# ===============================
+*.zip
+frontend/build/
+frontend/dist/
+
+# ===============================
+# Runtime uploads
+# ===============================
+backend/uploads/
+
+# ===============================
+# IDE
+# ===============================
+.idea/
+.vscode/
+*.iml
+
+# ===============================
+# Misc
+# ===============================
+conversation_log.txt
+session_summary.txt
+structure.txt
+claude.md
+.DS_Store
+Thumbs.db

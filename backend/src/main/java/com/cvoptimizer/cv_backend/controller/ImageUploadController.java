@@ -10,6 +10,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
+import java.util.Set;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/image-upload")
@@ -17,28 +19,52 @@ import java.nio.file.*;
 public class ImageUploadController {
 
     private static final String IMAGE_UPLOAD_DIR = "uploads/images/";
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "gif", "bmp", "tiff", "webp");
+    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
     @Autowired
     private OcrService ocrService;
 
     @PostMapping
     public ResponseEntity<String> uploadImage(@RequestParam("file") MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            return ResponseEntity.badRequest().body("No file provided");
+        }
+
+        if (file.getSize() > MAX_FILE_SIZE) {
+            return ResponseEntity.badRequest().body("File exceeds maximum size of 10MB");
+        }
+
+        String originalName = file.getOriginalFilename();
+        String extension = (originalName != null)
+                ? StringUtils.getFilenameExtension(originalName.toLowerCase())
+                : null;
+
+        if (extension == null || !ALLOWED_EXTENSIONS.contains(extension)) {
+            return ResponseEntity.badRequest().body("Invalid file type. Allowed: jpg, png, gif, bmp, tiff");
+        }
+
         try {
-            Files.createDirectories(Paths.get(IMAGE_UPLOAD_DIR));
-            String extension = StringUtils.getFilenameExtension(file.getOriginalFilename());
-            String baseName = StringUtils.stripFilenameExtension(file.getOriginalFilename());
-            String filename = baseName + "_" + System.currentTimeMillis() + "." + extension;
+            Path uploadDir = Paths.get(IMAGE_UPLOAD_DIR).toAbsolutePath().normalize();
+            Files.createDirectories(uploadDir);
 
-            Path path = Paths.get(IMAGE_UPLOAD_DIR + filename);
-            Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+            // Use a UUID filename — never trust user-supplied filenames
+            String filename = UUID.randomUUID() + "." + extension;
+            Path target = uploadDir.resolve(filename).normalize();
 
-            File savedImage = path.toFile();
+            // Guard against path traversal
+            if (!target.startsWith(uploadDir)) {
+                return ResponseEntity.badRequest().body("Invalid file path");
+            }
+
+            Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
+
+            File savedImage = target.toFile();
             String extractedText = ocrService.extractTextFromImage(savedImage);
 
             return ResponseEntity.ok(extractedText);
 
         } catch (IOException e) {
-            e.printStackTrace();
             return ResponseEntity.internalServerError().body("Image upload failed");
         }
     }

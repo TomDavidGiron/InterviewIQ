@@ -9,7 +9,7 @@ public class AiEvaluationProperties {
 
     private boolean enabled = false;
     private String apiKey;
-    private String model = "gpt-5.4";
+    private String model = "gpt-4o";
     private String baseUrl = "https://api.openai.com/v1";
     private Integer maxContextItems = 3;
     private Integer maxOutputTokens = 500;

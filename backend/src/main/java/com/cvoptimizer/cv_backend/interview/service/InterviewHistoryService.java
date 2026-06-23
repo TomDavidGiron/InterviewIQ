@@ -28,11 +28,12 @@ public class InterviewHistoryService {
         this.attemptRepo = attemptRepo;
     }
 
-    public InterviewSessionEntity createSession(String roleHint, String levelHint) {
+    public InterviewSessionEntity createSession(String roleHint, String levelHint, String userId) {
         InterviewSessionEntity s = new InterviewSessionEntity();
         s.setId(UUID.randomUUID().toString());
         s.setRoleHint(roleHint);
         s.setLevelHint(levelHint);
+        s.setUserId((userId == null || userId.isBlank()) ? "anonymous" : userId.trim());
         s.setStatus(InterviewSessionEntity.SessionStatus.IN_PROGRESS);
         s.setCreatedAt(Instant.now());
         s.setScore(0);
@@ -86,13 +87,15 @@ public class InterviewHistoryService {
         sessionRepo.save(session);
     }
 
-    public List<InterviewHistoryItemDto> getHistory(int page, int size) {
+    public List<InterviewHistoryItemDto> getHistory(String userId, int page, int size) {
         PageRequest pr = PageRequest.of(
                 Math.max(0, page),
                 Math.max(1, size),
                 Sort.by(Sort.Direction.DESC, "createdAt")
         );
-        Page<InterviewSessionEntity> p = sessionRepo.findAll(pr);
+        Page<InterviewSessionEntity> p = (userId != null && !userId.isBlank())
+                ? sessionRepo.findByUserId(userId, pr)
+                : sessionRepo.findAll(pr);
 
         List<InterviewHistoryItemDto> out = new ArrayList<>();
         for (InterviewSessionEntity s : p.getContent()) {
