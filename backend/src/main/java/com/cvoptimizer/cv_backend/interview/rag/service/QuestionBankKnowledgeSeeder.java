@@ -4,6 +4,7 @@ import com.cvoptimizer.cv_backend.interview.model.InterviewQuestion;
 import com.cvoptimizer.cv_backend.interview.service.QuestionBankService;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.Set;
 import java.util.StringJoiner;
 
 @Component
+@Order(2)
 public class QuestionBankKnowledgeSeeder implements ApplicationRunner {
 
     private final RagService ragService;
@@ -27,7 +29,7 @@ public class QuestionBankKnowledgeSeeder implements ApplicationRunner {
             return;
         }
 
-        List<InterviewQuestion> questions = questionBankService.getBackendJuniorBank();
+        List<InterviewQuestion> questions = questionBankService.getAllFromDatabase();
 
         for (InterviewQuestion question : questions) {
             String chunkKey = "question_bank:" + question.getId();
