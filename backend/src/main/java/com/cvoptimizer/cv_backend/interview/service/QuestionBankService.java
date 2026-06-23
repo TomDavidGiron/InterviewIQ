@@ -1,6 +1,11 @@
 package com.cvoptimizer.cv_backend.interview.service;
 
 import com.cvoptimizer.cv_backend.interview.model.InterviewQuestion;
+import com.cvoptimizer.cv_backend.interview.model.QuestionType;
+import com.cvoptimizer.cv_backend.interview.persistence.entity.QuestionEntity;
+import com.cvoptimizer.cv_backend.interview.persistence.repo.QuestionRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,6 +14,48 @@ import java.util.Set;
 @Service
 public class QuestionBankService {
 
+    private final QuestionRepository questionRepository;
+    private final ObjectMapper objectMapper;
+
+    public QuestionBankService(QuestionRepository questionRepository, ObjectMapper objectMapper) {
+        this.questionRepository = questionRepository;
+        this.objectMapper = objectMapper;
+    }
+
+    public List<InterviewQuestion> getAllFromDatabase() {
+        List<QuestionEntity> entities = questionRepository.findByStatus("ACTIVE");
+        List<InterviewQuestion> result = new ArrayList<>(entities.size());
+        for (QuestionEntity e : entities) {
+            try {
+                result.add(toInterviewQuestion(e));
+            } catch (Exception ex) {
+                System.err.println("[QuestionBankService] Skipping question " + e.getId() + ": " + ex.getMessage());
+            }
+        }
+        return result;
+    }
+
+    private InterviewQuestion toInterviewQuestion(QuestionEntity e) throws Exception {
+        QuestionType type = QuestionType.valueOf(e.getType());
+        Set<String> tags = e.parsedTags();
+        Set<String> keywords = e.parsedKeywords();
+
+        return switch (type) {
+            case MCQ -> {
+                List<String> options = e.getOptions() != null
+                        ? objectMapper.readValue(e.getOptions(), new TypeReference<List<String>>() {})
+                        : List.of();
+                yield new InterviewQuestion(e.getId(), e.getText(), tags, e.isCritical(),
+                        options, e.getCorrectOptionIndex() != null ? e.getCorrectOptionIndex() : 0);
+            }
+            case CODE -> new InterviewQuestion(e.getId(), e.getText(), tags, e.isCritical(),
+                    e.getStarterCode() != null ? e.getStarterCode() : "", keywords);
+            default -> new InterviewQuestion(e.getId(), e.getText(), tags, e.isCritical(), keywords);
+        };
+    }
+
+    // Used only by QuestionDbSeeder on first startup to populate the DB.
+    // After that, use getAllFromDatabase() for all runtime calls.
     public List<InterviewQuestion> getBackendJuniorBank() {
         List<InterviewQuestion> q = new ArrayList<>();
 
@@ -25,7 +72,7 @@ public class QuestionBankService {
 
         q.add(new InterviewQuestion("Q3",
                 "What does it mean for an HTTP method to be idempotent? Give examples.",
-                Set.of("rest", "api"), true, Set.of("idempotent", "retry")));
+                Set.of("rest", "api"), true, Set.of("idempotent", "same")));
 
         q.add(new InterviewQuestion("Q4",
                 "Explain HTTP status codes: 200, 201, 204, 400, 401, 403, 404, 409, 500.",
@@ -267,7 +314,7 @@ public class QuestionBankService {
 
         q.add(new InterviewQuestion("Q62",
                 "What is SOLID? Name at least 3 principles and explain one.",
-                Set.of("oop", "design patterns"), false, Set.of("solid", "single")));
+                Set.of("oop", "design patterns"), false, Set.of("responsibility", "principle")));
 
         q.add(new InterviewQuestion("Q63",
                 "What is dependency inversion principle (DIP)?",
@@ -291,7 +338,7 @@ public class QuestionBankService {
 
         q.add(new InterviewQuestion("Q68",
                 "Explain Builder pattern and when it helps.",
-                Set.of("design patterns"), false, Set.of("builder", "constructor")));
+                Set.of("design patterns"), false, Set.of("builder", "fluent")));
 
         q.add(new InterviewQuestion("Q69",
                 "What is coupling and cohesion? Which one do you want high/low?",
@@ -299,7 +346,7 @@ public class QuestionBankService {
 
         q.add(new InterviewQuestion("Q70",
                 "What is an anti-pattern? Give an example (God object, etc.).",
-                Set.of("design patterns"), false, Set.of("anti", "pattern")));
+                Set.of("design patterns"), false, Set.of("god", "coupling")));
 
         q.add(new InterviewQuestion("Q71",
                 "What is dependency injection as a design principle (not just Spring feature)?",
@@ -501,7 +548,7 @@ public class QuestionBankService {
 
         q.add(new InterviewQuestion("Q119",
                 "What is the first-level cache in Hibernate?",
-                Set.of("hibernate"), false, Set.of("first", "cache")));
+                Set.of("hibernate"), false, Set.of("session", "entity")));
 
         q.add(new InterviewQuestion("Q120",
                 "Explain cascading (CascadeType). When is it dangerous?",
@@ -677,8 +724,8 @@ public class QuestionBankService {
         // Concurrency / Backend fundamentals
         // =========================
         q.add(new InterviewQuestion("Q161",
-                "What is concurrency? What is a race condition?",
-                Set.of("concurrency"), true, Set.of("race", "condition")));
+                "What is concurrency? How does it differ from sequential execution?",
+                Set.of("concurrency"), true, Set.of("concurrent", "threads")));
 
         q.add(new InterviewQuestion("Q162",
                 "Difference between concurrency and parallelism?",
@@ -736,8 +783,8 @@ public class QuestionBankService {
                 Set.of("microservices", "kafka"), true, Set.of("sync", "async")));
 
         q.add(new InterviewQuestion("Q175",
-                "What is eventual consistency and why does it appear in microservices?",
-                Set.of("microservices"), false, Set.of("eventual", "consistency")));
+                "Two microservices each own their own database. Service A finishes but Service B fails. How do you handle this inconsistency?",
+                Set.of("microservices"), false, Set.of("saga", "compensation")));
 
         q.add(new InterviewQuestion("Q176",
                 "What is the Saga pattern at a high level?",
@@ -863,11 +910,11 @@ public class QuestionBankService {
 
         q.add(new InterviewQuestion("Q205",
                 "What does 'at least once' delivery mean? What is a downside?",
-                Set.of("kafka"), false, Set.of("at", "least")));
+                Set.of("kafka"), false, Set.of("delivered", "duplicate")));
 
         q.add(new InterviewQuestion("Q206",
                 "What does 'exactly once' mean conceptually? Why is it harder?",
-                Set.of("kafka"), false, Set.of("exactly", "once")));
+                Set.of("kafka"), false, Set.of("idempotent", "deduplication")));
 
         q.add(new InterviewQuestion("Q207",
                 "What is idempotent consumer and why is it important?",
@@ -1099,6 +1146,893 @@ public class QuestionBankService {
         q.add(new InterviewQuestion("Q260",
                 "If an endpoint is slow, how do you debug it step-by-step? (logs, metrics, DB, profiling)",
                 Set.of("devops", "sql", "api"), true, Set.of("logs", "metrics")));
+
+        // =========================
+        // Modern Java Concurrency (Java 8-21)
+        // =========================
+        q.add(new InterviewQuestion("Q261",
+                "What is CompletableFuture in Java? How does it differ from Future?",
+                Set.of("java", "concurrency"), true, Set.of("completablefuture", "async")));
+
+        q.add(new InterviewQuestion("Q262",
+                "What is the difference between ReentrantLock and synchronized in Java?",
+                Set.of("java", "concurrency"), false, Set.of("reentrantlock", "lock")));
+
+        q.add(new InterviewQuestion("Q263",
+                "Why is ConcurrentHashMap preferred over Collections.synchronizedMap()?",
+                Set.of("java", "concurrency"), true, Set.of("concurrenthashmap", "segment")));
+
+        q.add(new InterviewQuestion("Q264",
+                "What is AtomicInteger? When would you use it instead of synchronized?",
+                Set.of("java", "concurrency"), false, Set.of("atomic", "compare")));
+
+        q.add(new InterviewQuestion("Q265",
+                "What is a ForkJoinPool and when does Java use it internally?",
+                Set.of("java", "concurrency"), false, Set.of("forkjoin", "parallel")));
+
+        q.add(new InterviewQuestion("Q266",
+                "What is ThreadLocal and what is a common use-case in backend frameworks?",
+                Set.of("java", "concurrency"), false, Set.of("threadlocal", "thread")));
+
+        q.add(new InterviewQuestion("Q267",
+                "Explain the happens-before relationship in Java memory model.",
+                Set.of("java", "concurrency"), false, Set.of("happens", "visibility")));
+
+        // =========================
+        // Scenario / Applied Questions
+        // =========================
+        q.add(new InterviewQuestion("Q268",
+                "Your API endpoint suddenly takes 5 seconds to respond. It was fast yesterday, nothing was deployed. Walk me through how you diagnose and fix it.",
+                Set.of("sql", "api", "devops"), true, Set.of("query", "index")));
+
+        q.add(new InterviewQuestion("Q269",
+                "You need to add a NOT NULL column to a table that already has 10 million rows in production. What are the risks and how do you do it safely?",
+                Set.of("sql", "devops"), false, Set.of("default", "migration")));
+
+        q.add(new InterviewQuestion("Q270",
+                "A junior developer's PR catches Exception everywhere and returns HTTP 500 for all errors. What issues do you raise in code review and what do you suggest instead?",
+                Set.of("spring", "java"), true, Set.of("specific", "handler")));
+
+        q.add(new InterviewQuestion("Q271",
+                "Your service calls an external payment API that sometimes fails or takes too long. How do you make your service resilient to this?",
+                Set.of("api", "microservices"), true, Set.of("timeout", "fallback")));
+
+        q.add(new InterviewQuestion("Q272",
+                "A user reports their data disappeared after the server restarted. You realise the session store was in-memory. What happened and how do you prevent it?",
+                Set.of("java", "spring"), true, Set.of("persist", "database")));
+
+        q.add(new InterviewQuestion("Q273",
+                "Production is returning 500 errors for roughly 20% of requests. You have access to logs and metrics. What do you do first?",
+                Set.of("devops", "api"), true, Set.of("logs", "trace")));
+
+        q.add(new InterviewQuestion("Q274",
+                "Two users buy the last item in stock at exactly the same time. Both checks pass, both purchases complete — but there is only one item. What went wrong and how do you fix it?",
+                Set.of("sql", "concurrency"), true, Set.of("lock", "transaction")));
+
+        q.add(new InterviewQuestion("Q275",
+                "Your Spring Boot app memory grows steadily over 24 hours then crashes with OutOfMemoryError. How do you investigate this?",
+                Set.of("java", "devops"), false, Set.of("heap", "leak")));
+
+        q.add(new InterviewQuestion("Q276",
+                "You need to rename a field in a REST API response. Three external clients use this API. What is your migration strategy?",
+                Set.of("api", "microservices"), false, Set.of("version", "backward")));
+
+        q.add(new InterviewQuestion("Q277",
+                "You have a method that sends a confirmation email and then saves to the database. The email sends but the DB save fails. Users get an email but no record is created. How would you redesign this?",
+                Set.of("spring", "sql"), true, Set.of("transaction", "rollback")));
+
+        // =========================
+        // Spot-the-Bug / Applied Code Questions
+        // =========================
+        q.add(new InterviewQuestion("SPOTBUG1",
+                "Write a SQL query to find all users who have placed more than 3 orders. Tables: users(id, username), orders(id, user_id, created_at).",
+                Set.of("sql"), true,
+                "",
+                Set.of("count", "having", "group")));
+
+        q.add(new InterviewQuestion("SPOTBUG2",
+                "Write a SQL query to return the username and total amount spent for the top 5 customers. Tables: users(id, username), orders(id, user_id, total_amount).",
+                Set.of("sql"), false,
+                "",
+                Set.of("sum", "group", "limit")));
+
+        q.add(new InterviewQuestion("SPOTBUG3",
+                "What is the bug in this code and how do you fix it?\n\nOptional<User> user = userRepo.findById(id);\nreturn user.get().getName();",
+                Set.of("java"), true,
+                "",
+                Set.of("present", "orElse")));
+
+        q.add(new InterviewQuestion("SPOTBUG4",
+                "What is wrong with this code? How would you make it thread-safe?\n\nprivate int counter = 0;\npublic void increment() { counter++; }\npublic int getCount() { return counter; }",
+                Set.of("java", "concurrency"), true,
+                "",
+                Set.of("atomic", "synchronized")));
+
+        q.add(new InterviewQuestion("SPOTBUG5",
+                "Rewrite this loop using Java Streams:\n\nList<String> result = new ArrayList<>();\nfor (String name : names) {\n  if (name.length() > 5) result.add(name.toUpperCase());\n}\nreturn result;",
+                Set.of("java"), false,
+                "",
+                Set.of("filter", "map")));
+
+        q.add(new InterviewQuestion("SPOTBUG6",
+                "Write a SQL query to return all departments where the average employee salary is above 50000. Tables: employees(id, name, salary, dept_id), departments(id, name).",
+                Set.of("sql"), false,
+                "",
+                Set.of("avg", "having")));
+
+        q.add(new InterviewQuestion("SPOTBUG7",
+                "What is wrong with this Spring service, and why does it make testing harder?\n\n@Service\npublic class OrderService {\n  @Autowired\n  private UserRepository repo;\n}",
+                Set.of("spring", "testing"), false,
+                "",
+                Set.of("constructor", "final")));
+
+        q.add(new InterviewQuestion("SPOTBUG8",
+                "What is the problem with this code? A ConcurrentModificationException is thrown at runtime.\n\nfor (String key : map.keySet()) {\n  if (key.startsWith(\"tmp_\")) map.remove(key);\n}",
+                Set.of("java"), true,
+                "",
+                Set.of("iterator", "remove")));
+
+        // =========================
+        // Frontend / JavaScript / React
+        // =========================
+        q.add(new InterviewQuestion("Q278",
+                "What is the difference between let, const, and var in JavaScript?",
+                Set.of("javascript"), true, Set.of("hoisting", "block")));
+
+        q.add(new InterviewQuestion("Q279",
+                "Explain closures in JavaScript with a simple example.",
+                Set.of("javascript"), true, Set.of("closure", "scope")));
+
+        q.add(new InterviewQuestion("Q280",
+                "What is the JavaScript event loop? How does async code actually work?",
+                Set.of("javascript"), true, Set.of("callstack", "queue")));
+
+        q.add(new InterviewQuestion("Q281",
+                "What is a Promise in JavaScript? How does async/await relate to it?",
+                Set.of("javascript"), true, Set.of("promise", "resolve")));
+
+        q.add(new InterviewQuestion("Q282",
+                "What is the difference between == and === in JavaScript?",
+                Set.of("javascript"), true, Set.of("coercion", "strict")));
+
+        q.add(new InterviewQuestion("Q283",
+                "What is event bubbling in the DOM? How does event delegation use it?",
+                Set.of("javascript"), false, Set.of("bubble", "parent")));
+
+        q.add(new InterviewQuestion("Q284",
+                "What is the difference between state and props in React?",
+                Set.of("react"), true, Set.of("mutable", "parent")));
+
+        q.add(new InterviewQuestion("Q285",
+                "What are React hooks? Name 3 common ones and explain useState.",
+                Set.of("react"), true, Set.of("usestate", "useeffect")));
+
+        q.add(new InterviewQuestion("Q286",
+                "What is the virtual DOM in React and why does it improve performance?",
+                Set.of("react"), true, Set.of("diffing", "reconciliation")));
+
+        q.add(new InterviewQuestion("Q287",
+                "Explain useEffect in React. What is a cleanup function and when does it run?",
+                Set.of("react"), false, Set.of("dependency", "cleanup")));
+
+        q.add(new InterviewQuestion("Q288",
+                "What is the difference between a controlled and uncontrolled component in React?",
+                Set.of("react"), false, Set.of("controlled", "ref")));
+
+        q.add(new InterviewQuestion("Q289",
+                "What is React Context and when would you use it instead of passing props?",
+                Set.of("react"), false, Set.of("context", "drilling")));
+
+        q.add(new InterviewQuestion("Q290",
+                "What is localStorage vs sessionStorage? When would you use each?",
+                Set.of("javascript"), false, Set.of("session", "persist")));
+
+        q.add(new InterviewQuestion("Q291",
+                "What is CSS flexbox? Give a practical example of when you would use it.",
+                Set.of("css"), false, Set.of("flex", "align")));
+
+        q.add(new InterviewQuestion("Q292",
+                "What is responsive design and how do CSS media queries work?",
+                Set.of("css"), false, Set.of("breakpoint", "media")));
+
+        q.add(new InterviewQuestion("Q293",
+                "What is code splitting and lazy loading in React? Why do they matter for performance?",
+                Set.of("react"), false, Set.of("lazy", "bundle")));
+
+        q.add(new InterviewQuestion("Q294",
+                "What is TypeScript? What does it add over JavaScript and what is the trade-off?",
+                Set.of("typescript"), false, Set.of("static", "compile")));
+
+        q.add(new InterviewQuestion("Q295",
+                "A React component re-renders on every keystroke slowing the UI. How do you investigate and fix it?",
+                Set.of("react"), true, Set.of("memo", "dependency")));
+
+        // =========================
+        // Python / Django
+        // =========================
+        q.add(new InterviewQuestion("Q296",
+                "What is the difference between a list and a tuple in Python?",
+                Set.of("python"), true, Set.of("mutable", "immutable")));
+
+        q.add(new InterviewQuestion("Q297",
+                "What is a Python decorator? Explain what it does with a simple example.",
+                Set.of("python"), true, Set.of("wrap", "function")));
+
+        q.add(new InterviewQuestion("Q298",
+                "What is a Python generator and how does yield work?",
+                Set.of("python"), false, Set.of("yield", "lazy")));
+
+        q.add(new InterviewQuestion("Q299",
+                "What is the GIL in Python and how does it affect multithreading?",
+                Set.of("python"), false, Set.of("gil", "thread")));
+
+        q.add(new InterviewQuestion("Q300",
+                "Explain list comprehensions in Python. How are they different from a for loop?",
+                Set.of("python"), false, Set.of("comprehension", "expression")));
+
+        q.add(new InterviewQuestion("Q301",
+                "What is the difference between *args and **kwargs in Python?",
+                Set.of("python"), false, Set.of("positional", "keyword")));
+
+        q.add(new InterviewQuestion("Q302",
+                "What is Django's ORM? How does it compare to writing raw SQL?",
+                Set.of("django", "python"), true, Set.of("queryset", "model")));
+
+        q.add(new InterviewQuestion("Q303",
+                "Explain Django's MVT pattern (Model, View, Template). What is each layer responsible for?",
+                Set.of("django", "python"), true, Set.of("model", "view")));
+
+        q.add(new InterviewQuestion("Q304",
+                "What is a Django migration and why is running them in the wrong order dangerous?",
+                Set.of("django", "python"), true, Set.of("migration", "schema")));
+
+        q.add(new InterviewQuestion("Q305",
+                "What is Django REST Framework? What does a serializer do?",
+                Set.of("django", "python"), false, Set.of("serializer", "validate")));
+
+        q.add(new InterviewQuestion("Q306",
+                "What is Django middleware and give one real-world use-case?",
+                Set.of("django", "python"), false, Set.of("middleware", "request")));
+
+        q.add(new InterviewQuestion("Q307",
+                "What is pytest and how does it differ from Python's built-in unittest?",
+                Set.of("python", "testing"), false, Set.of("fixture", "assert")));
+
+        q.add(new InterviewQuestion("Q308",
+                "What is a virtual environment in Python and why is it essential on every project?",
+                Set.of("python"), false, Set.of("isolate", "dependency")));
+
+        q.add(new InterviewQuestion("Q309",
+                "What is async/await in Python? How does asyncio differ from threading?",
+                Set.of("python"), false, Set.of("coroutine", "event")));
+
+        q.add(new InterviewQuestion("Q310",
+                "Your Django app queries the database on every request for the same data. How do you fix it?",
+                Set.of("django", "python"), true, Set.of("cache", "queryset")));
+
+        // =========================
+        // .NET / C#
+        // =========================
+        q.add(new InterviewQuestion("Q311",
+                "What is the difference between .NET Framework and .NET Core (now .NET 5+)?",
+                Set.of("c#", ".net"), true, Set.of("cross", "platform")));
+
+        q.add(new InterviewQuestion("Q312",
+                "Explain value types vs reference types in C#. Where is each stored?",
+                Set.of("c#"), true, Set.of("stack", "heap")));
+
+        q.add(new InterviewQuestion("Q313",
+                "What is LINQ in C#? Give an example of where you would use it.",
+                Set.of("c#"), true, Set.of("query", "collection")));
+
+        q.add(new InterviewQuestion("Q314",
+                "What is async/await in C# and how does it relate to the Task class?",
+                Set.of("c#"), true, Set.of("task", "await")));
+
+        q.add(new InterviewQuestion("Q315",
+                "What is dependency injection in ASP.NET Core? How do you register a service?",
+                Set.of("c#", ".net"), true, Set.of("register", "inject")));
+
+        q.add(new InterviewQuestion("Q316",
+                "What is Entity Framework Core? How is it similar to JPA in Java?",
+                Set.of("c#", ".net"), false, Set.of("dbcontext", "entity")));
+
+        q.add(new InterviewQuestion("Q317",
+                "What is middleware in ASP.NET Core and how does the pipeline work?",
+                Set.of("c#", ".net"), false, Set.of("pipeline", "next")));
+
+        q.add(new InterviewQuestion("Q318",
+                "What is a nullable reference type in C# and the null-coalescing operator ??",
+                Set.of("c#"), false, Set.of("nullable", "coalescing")));
+
+        q.add(new InterviewQuestion("Q319",
+                "What is NuGet and what is the equivalent of a requirements.txt or pom.xml in .NET?",
+                Set.of("c#", ".net"), false, Set.of("package", "dependency")));
+
+        q.add(new InterviewQuestion("Q320",
+                "What is the difference between an interface and an abstract class in C#?",
+                Set.of("c#"), true, Set.of("multiple", "implement")));
+
+        // =========================
+        // Android / Kotlin
+        // =========================
+        q.add(new InterviewQuestion("Q321",
+                "What is the difference between an Activity and a Fragment in Android?",
+                Set.of("android"), true, Set.of("lifecycle", "fragment")));
+
+        q.add(new InterviewQuestion("Q322",
+                "Explain the Android Activity lifecycle: onCreate, onResume, onPause, onDestroy.",
+                Set.of("android"), true, Set.of("oncreate", "lifecycle")));
+
+        q.add(new InterviewQuestion("Q323",
+                "What is an Intent in Android? What is the difference between explicit and implicit?",
+                Set.of("android"), true, Set.of("explicit", "action")));
+
+        q.add(new InterviewQuestion("Q324",
+                "What is Kotlin's null safety? How does it prevent NullPointerException?",
+                Set.of("android", "kotlin"), true, Set.of("nullable", "operator")));
+
+        q.add(new InterviewQuestion("Q325",
+                "What is a Kotlin coroutine and why is it preferred over Java threads on Android?",
+                Set.of("android", "kotlin"), false, Set.of("suspend", "dispatcher")));
+
+        q.add(new InterviewQuestion("Q326",
+                "What are the main local storage options on Android: SharedPreferences, Room, files?",
+                Set.of("android"), false, Set.of("room", "sharedpreferences")));
+
+        q.add(new InterviewQuestion("Q327",
+                "What is RecyclerView and why is it used instead of ListView?",
+                Set.of("android"), false, Set.of("recycle", "holder")));
+
+        q.add(new InterviewQuestion("Q328",
+                "What is Gradle in Android? What does the build.gradle file control?",
+                Set.of("android"), false, Set.of("build", "dependency")));
+
+        // =========================
+        // iOS / Swift
+        // =========================
+        q.add(new InterviewQuestion("Q329",
+                "What is an Optional in Swift and why does Swift have them?",
+                Set.of("ios", "swift"), true, Set.of("nil", "unwrap")));
+
+        q.add(new InterviewQuestion("Q330",
+                "Explain protocols in Swift. How do they compare to interfaces in Java?",
+                Set.of("ios", "swift"), true, Set.of("protocol", "conform")));
+
+        q.add(new InterviewQuestion("Q331",
+                "What is ARC (Automatic Reference Counting) in Swift?",
+                Set.of("ios", "swift"), true, Set.of("retain", "count")));
+
+        q.add(new InterviewQuestion("Q332",
+                "What is the difference between a strong and a weak reference in Swift? When does each matter?",
+                Set.of("ios", "swift"), false, Set.of("weak", "cycle")));
+
+        q.add(new InterviewQuestion("Q333",
+                "What is the difference between SwiftUI and UIKit?",
+                Set.of("ios", "swift"), false, Set.of("declarative", "uikit")));
+
+        q.add(new InterviewQuestion("Q334",
+                "What is a closure in Swift and how does it capture values?",
+                Set.of("ios", "swift"), false, Set.of("capture", "closure")));
+
+        // =========================
+        // Data Science / Machine Learning
+        // =========================
+        q.add(new InterviewQuestion("Q335",
+                "What is the difference between supervised and unsupervised learning?",
+                Set.of("ml"), true, Set.of("label", "supervised")));
+
+        q.add(new InterviewQuestion("Q336",
+                "What is overfitting? How do you detect and prevent it?",
+                Set.of("ml"), true, Set.of("generalize", "validation")));
+
+        q.add(new InterviewQuestion("Q337",
+                "What is cross-validation and why is it used instead of a single train/test split?",
+                Set.of("ml"), false, Set.of("fold", "evaluate")));
+
+        q.add(new InterviewQuestion("Q338",
+                "Explain precision, recall, and F1 score. When would you optimise for recall over precision?",
+                Set.of("ml"), true, Set.of("precision", "recall")));
+
+        q.add(new InterviewQuestion("Q339",
+                "What is a neural network at a high level? What is a layer and an activation function?",
+                Set.of("ml"), false, Set.of("weight", "activation")));
+
+        q.add(new InterviewQuestion("Q340",
+                "What is a Pandas DataFrame? What operations do you use most often?",
+                Set.of("python", "ml"), true, Set.of("dataframe", "column")));
+
+        q.add(new InterviewQuestion("Q341",
+                "What is NumPy and why is it faster than Python lists for numerical computation?",
+                Set.of("python", "ml"), false, Set.of("vectorized", "array")));
+
+        q.add(new InterviewQuestion("Q342",
+                "What is feature engineering? Give a concrete example.",
+                Set.of("ml"), false, Set.of("feature", "transform")));
+
+        q.add(new InterviewQuestion("Q343",
+                "What is gradient descent at a high level? What does the learning rate control?",
+                Set.of("ml"), false, Set.of("gradient", "minimize")));
+
+        q.add(new InterviewQuestion("Q344",
+                "Your model has 99% accuracy but it barely predicts the minority class. What is happening?",
+                Set.of("ml"), true, Set.of("imbalanced", "recall")));
+
+        // =========================
+        // Database Administration (Advanced SQL)
+        // =========================
+        q.add(new InterviewQuestion("Q345",
+                "What is a window function in SQL? Give an example using ROW_NUMBER or RANK.",
+                Set.of("sql", "postgresql"), true, Set.of("over", "partition")));
+
+        q.add(new InterviewQuestion("Q346",
+                "What is a CTE (Common Table Expression)? How is it different from a subquery?",
+                Set.of("sql"), false, Set.of("cte", "readable")));
+
+        q.add(new InterviewQuestion("Q347",
+                "What is a stored procedure? When would you use one and what are the downsides?",
+                Set.of("sql"), false, Set.of("procedure", "reusable")));
+
+        q.add(new InterviewQuestion("Q348",
+                "What is a database trigger? Give a use-case where it makes sense.",
+                Set.of("sql"), false, Set.of("trigger", "automatic")));
+
+        q.add(new InterviewQuestion("Q349",
+                "What is a connection pool? Why is it critical for backend applications?",
+                Set.of("sql"), true, Set.of("pool", "overhead")));
+
+        q.add(new InterviewQuestion("Q350",
+                "What is a materialized view? How does it differ from a regular view?",
+                Set.of("sql", "postgresql"), false, Set.of("materialized", "refresh")));
+
+        q.add(new InterviewQuestion("Q351",
+                "Write a query to find and remove duplicate rows from a table, keeping only one.",
+                Set.of("sql"), false, Set.of("duplicate", "rowid")));
+
+        q.add(new InterviewQuestion("Q352",
+                "What is EXPLAIN / EXPLAIN ANALYZE in PostgreSQL and how do you use it to fix slow queries?",
+                Set.of("sql", "postgresql"), true, Set.of("explain", "index")));
+
+        // =========================
+        // Security Engineer
+        // =========================
+        q.add(new InterviewQuestion("Q353",
+                "What is the OWASP Top 10? Name at least 3 and explain one.",
+                Set.of("security"), true, Set.of("injection", "xss")));
+
+        q.add(new InterviewQuestion("Q354",
+                "What is TLS/SSL? What does it protect against and how does the handshake work at a high level?",
+                Set.of("security"), true, Set.of("certificate", "encrypt")));
+
+        q.add(new InterviewQuestion("Q355",
+                "What is the difference between hashing and encryption? When do you use each?",
+                Set.of("security"), true, Set.of("hash", "reversible")));
+
+        q.add(new InterviewQuestion("Q356",
+                "What is a man-in-the-middle (MITM) attack? How do certificates prevent it?",
+                Set.of("security"), false, Set.of("certificate", "intercept")));
+
+        q.add(new InterviewQuestion("Q357",
+                "Explain the OAuth 2.0 authorization code flow step by step.",
+                Set.of("security", "api"), false, Set.of("code", "token")));
+
+        q.add(new InterviewQuestion("Q358",
+                "What is OpenID Connect (OIDC) and how does it extend OAuth 2.0?",
+                Set.of("security", "api"), false, Set.of("identity", "openid")));
+
+        q.add(new InterviewQuestion("Q359",
+                "What is the principle of least privilege? Give a concrete backend example.",
+                Set.of("security"), true, Set.of("minimum", "access")));
+
+        q.add(new InterviewQuestion("Q360",
+                "What is a security misconfiguration? Give two examples of how this happens in real systems.",
+                Set.of("security"), false, Set.of("default", "exposed")));
+
+        q.add(new InterviewQuestion("Q361",
+                "What is the difference between input sanitization and validation? Why do you need both?",
+                Set.of("security"), true, Set.of("sanitize", "validate")));
+
+        q.add(new InterviewQuestion("Q362",
+                "What is a JWT and what are the security risks if you store sensitive data inside it?",
+                Set.of("security", "api"), true, Set.of("signed", "payload")));
+
+        // =========================
+        // Embedded / Systems Engineering
+        // =========================
+        q.add(new InterviewQuestion("Q363",
+                "What is the difference between a process and a thread at the OS level?",
+                Set.of("linux", "embedded"), true, Set.of("memory", "share")));
+
+        q.add(new InterviewQuestion("Q364",
+                "What is a pointer in C? Why are they considered dangerous?",
+                Set.of("embedded"), true, Set.of("address", "dereference")));
+
+        q.add(new InterviewQuestion("Q365",
+                "What is a stack overflow? What typically causes it in embedded or systems code?",
+                Set.of("embedded"), false, Set.of("recursion", "depth")));
+
+        q.add(new InterviewQuestion("Q366",
+                "What is the difference between big-endian and little-endian byte order?",
+                Set.of("embedded"), false, Set.of("endian", "byte")));
+
+        q.add(new InterviewQuestion("Q367",
+                "What is an interrupt in embedded systems? What is an ISR?",
+                Set.of("embedded"), true, Set.of("interrupt", "handler")));
+
+        q.add(new InterviewQuestion("Q368",
+                "What is the difference between volatile in C and volatile in Java?",
+                Set.of("embedded", "java"), false, Set.of("compiler", "optimize")));
+
+        q.add(new InterviewQuestion("Q369",
+                "What is an RTOS (Real-Time Operating System)? When would you need one over a standard OS?",
+                Set.of("embedded"), false, Set.of("deterministic", "deadline")));
+
+        q.add(new InterviewQuestion("Q370",
+                "What is the difference between polling and interrupt-driven I/O in embedded systems?",
+                Set.of("embedded"), false, Set.of("polling", "interrupt")));
+
+        // =========================
+        // Frontend / React / JS — Extended
+        // =========================
+        q.add(new InterviewQuestion("Q371",
+                "What is useMemo in React? When does it help and when is it premature optimisation?",
+                Set.of("react"), false, Set.of("memoize", "expensive")));
+
+        q.add(new InterviewQuestion("Q372",
+                "What is useCallback in React? How is it different from useMemo?",
+                Set.of("react"), false, Set.of("callback", "reference")));
+
+        q.add(new InterviewQuestion("Q373",
+                "What is a custom hook in React and when would you create one?",
+                Set.of("react"), false, Set.of("reuse", "hook")));
+
+        q.add(new InterviewQuestion("Q374",
+                "What is an Error Boundary in React? What does it catch?",
+                Set.of("react"), false, Set.of("boundary", "render")));
+
+        q.add(new InterviewQuestion("Q375",
+                "Explain JavaScript's prototype chain. How does inheritance work without classes?",
+                Set.of("javascript"), false, Set.of("prototype", "chain")));
+
+        q.add(new InterviewQuestion("Q376",
+                "What does 'this' refer to in JavaScript? How does it behave differently in arrow functions?",
+                Set.of("javascript"), true, Set.of("context", "arrow")));
+
+        q.add(new InterviewQuestion("Q377",
+                "What is the Fetch API? How do you handle errors from a failed HTTP response?",
+                Set.of("javascript"), false, Set.of("fetch", "promise")));
+
+        q.add(new InterviewQuestion("Q378",
+                "What is CSS specificity and how does the browser decide which rule wins?",
+                Set.of("css"), false, Set.of("specificity", "selector")));
+
+        q.add(new InterviewQuestion("Q379",
+                "What are Core Web Vitals? Name two metrics and what they measure.",
+                Set.of("javascript"), false, Set.of("performance", "lcp")));
+
+        q.add(new InterviewQuestion("Q380",
+                "What is an XSS attack from the frontend perspective? How do you prevent it in React?",
+                Set.of("javascript", "security"), true, Set.of("sanitize", "escape")));
+
+        q.add(new InterviewQuestion("Q381",
+                "What is the difference between client-side rendering, server-side rendering, and static site generation?",
+                Set.of("react", "javascript"), false, Set.of("server", "static")));
+
+        q.add(new InterviewQuestion("Q382",
+                "Your React app's first load is slow. Name three techniques to improve it.",
+                Set.of("react"), false, Set.of("lazy", "bundle")));
+
+        // =========================
+        // Python / Django — Extended
+        // =========================
+        q.add(new InterviewQuestion("Q383",
+                "What is a Python context manager? How does the 'with' statement work under the hood?",
+                Set.of("python"), false, Set.of("enter", "exit")));
+
+        q.add(new InterviewQuestion("Q384",
+                "What are Python dunder (magic) methods? Give three examples.",
+                Set.of("python"), false, Set.of("dunder", "str")));
+
+        q.add(new InterviewQuestion("Q385",
+                "What are type hints in Python? Are they enforced at runtime?",
+                Set.of("python"), false, Set.of("annotation", "runtime")));
+
+        q.add(new InterviewQuestion("Q386",
+                "What is a Python dataclass? What boilerplate does it remove?",
+                Set.of("python"), false, Set.of("dataclass", "boilerplate")));
+
+        q.add(new InterviewQuestion("Q387",
+                "What are Django signals? Give a real-world example of when you would use one.",
+                Set.of("django", "python"), false, Set.of("signal", "receiver")));
+
+        q.add(new InterviewQuestion("Q388",
+                "What is Celery in a Django project and why do you need it?",
+                Set.of("django", "python"), false, Set.of("background", "task")));
+
+        q.add(new InterviewQuestion("Q389",
+                "What is the N+1 query problem in Django's ORM? How do you fix it?",
+                Set.of("django", "python"), true, Set.of("prefetch", "related")));
+
+        q.add(new InterviewQuestion("Q390",
+                "What is Django's built-in authentication? What does it give you out of the box?",
+                Set.of("django", "python"), false, Set.of("user", "session")));
+
+        q.add(new InterviewQuestion("Q391",
+                "What is the difference between a shallow copy and deepcopy in Python? When do you need deepcopy?",
+                Set.of("python"), false, Set.of("nested", "reference")));
+
+        q.add(new InterviewQuestion("Q392",
+                "Your Django REST endpoint returns data slowly. Walk me through your investigation.",
+                Set.of("django", "python"), true, Set.of("query", "profiling")));
+
+        // =========================
+        // .NET / C# — Extended
+        // =========================
+        q.add(new InterviewQuestion("Q393",
+                "What are generics in C#? How do they improve type safety and reuse?",
+                Set.of("c#"), false, Set.of("generic", "reusable")));
+
+        q.add(new InterviewQuestion("Q394",
+                "What is a delegate in C# and how does it relate to events?",
+                Set.of("c#"), false, Set.of("delegate", "event")));
+
+        q.add(new InterviewQuestion("Q395",
+                "What is IDisposable in C# and why should you use the 'using' statement?",
+                Set.of("c#"), false, Set.of("dispose", "resource")));
+
+        q.add(new InterviewQuestion("Q396",
+                "What is a C# record (C# 9+) and when would you prefer it over a class?",
+                Set.of("c#"), false, Set.of("record", "immutable")));
+
+        q.add(new InterviewQuestion("Q397",
+                "What is the difference between IEnumerable and IQueryable in C#?",
+                Set.of("c#", ".net"), true, Set.of("queryable", "deferred")));
+
+        q.add(new InterviewQuestion("Q398",
+                "How do you run Entity Framework Core migrations and what does Update-Database do?",
+                Set.of("c#", ".net"), false, Set.of("migration", "schema")));
+
+        q.add(new InterviewQuestion("Q399",
+                "What testing frameworks are common in .NET and how do you mock dependencies?",
+                Set.of("c#", "testing"), false, Set.of("xunit", "mock")));
+
+        q.add(new InterviewQuestion("Q400",
+                "What is C# pattern matching? Give an example using switch expressions.",
+                Set.of("c#"), false, Set.of("pattern", "switch")));
+
+        q.add(new InterviewQuestion("Q401",
+                "What is IHostedService in ASP.NET Core? When would you use a background service?",
+                Set.of("c#", ".net"), false, Set.of("hosted", "background")));
+
+        q.add(new InterviewQuestion("Q402",
+                "Your ASP.NET Core API returns 401 even though credentials look correct. What do you check?",
+                Set.of("c#", ".net"), true, Set.of("token", "middleware")));
+
+        // =========================
+        // Android / Kotlin — Extended
+        // =========================
+        q.add(new InterviewQuestion("Q403",
+                "What is ViewModel in Android and why does it survive configuration changes like screen rotation?",
+                Set.of("android"), true, Set.of("viewmodel", "lifecycle")));
+
+        q.add(new InterviewQuestion("Q404",
+                "What is LiveData and how does it work with ViewModel?",
+                Set.of("android"), false, Set.of("observe", "lifecycle")));
+
+        q.add(new InterviewQuestion("Q405",
+                "What is Jetpack Compose and how is it different from XML layouts?",
+                Set.of("android"), false, Set.of("composable", "declarative")));
+
+        q.add(new InterviewQuestion("Q406",
+                "What is a Kotlin data class? What methods does the compiler generate for you?",
+                Set.of("android", "kotlin"), false, Set.of("equals", "copy")));
+
+        q.add(new InterviewQuestion("Q407",
+                "What are Kotlin extension functions? Give a practical example.",
+                Set.of("android", "kotlin"), false, Set.of("extension", "receiver")));
+
+        q.add(new InterviewQuestion("Q408",
+                "How do you handle runtime permissions in Android (camera, location, etc.)?",
+                Set.of("android"), false, Set.of("permission", "request")));
+
+        q.add(new InterviewQuestion("Q409",
+                "What is WorkManager in Android and when would you use it over a coroutine?",
+                Set.of("android"), false, Set.of("persist", "background")));
+
+        q.add(new InterviewQuestion("Q410",
+                "What is the difference between launch and async in Kotlin coroutines?",
+                Set.of("android", "kotlin"), false, Set.of("deferred", "await")));
+
+        // =========================
+        // iOS / Swift — Extended
+        // =========================
+        q.add(new InterviewQuestion("Q411",
+                "What is an enum with associated values in Swift? Give an example.",
+                Set.of("ios", "swift"), false, Set.of("associated", "case")));
+
+        q.add(new InterviewQuestion("Q412",
+                "What is the Codable protocol in Swift? How does it handle JSON encoding and decoding?",
+                Set.of("ios", "swift"), false, Set.of("codable", "decode")));
+
+        q.add(new InterviewQuestion("Q413",
+                "How do you make a network request in Swift using URLSession?",
+                Set.of("ios", "swift"), false, Set.of("urlsession", "task")));
+
+        q.add(new InterviewQuestion("Q414",
+                "UserDefaults vs CoreData vs Keychain — when do you use each for iOS storage?",
+                Set.of("ios", "swift"), false, Set.of("keychain", "sensitive")));
+
+        q.add(new InterviewQuestion("Q415",
+                "What is @State and @Binding in SwiftUI and how do they relate?",
+                Set.of("ios", "swift"), false, Set.of("state", "binding")));
+
+        q.add(new InterviewQuestion("Q416",
+                "What is a retain cycle in Swift and how do you prevent it?",
+                Set.of("ios", "swift"), true, Set.of("weak", "cycle")));
+
+        q.add(new InterviewQuestion("Q417",
+                "What is an @escaping closure in Swift? Why does it matter for async code?",
+                Set.of("ios", "swift"), false, Set.of("escaping", "outlive")));
+
+        q.add(new InterviewQuestion("Q418",
+                "How do you write a unit test in Swift using XCTest?",
+                Set.of("ios", "swift", "testing"), false, Set.of("xctest", "assert")));
+
+        // =========================
+        // Data Science / ML — Extended
+        // =========================
+        q.add(new InterviewQuestion("Q419",
+                "What is the bias-variance tradeoff in machine learning?",
+                Set.of("ml"), true, Set.of("bias", "variance")));
+
+        q.add(new InterviewQuestion("Q420",
+                "What is a decision tree? What are its main advantages and disadvantages?",
+                Set.of("ml"), false, Set.of("split", "overfit")));
+
+        q.add(new InterviewQuestion("Q421",
+                "What is a Random Forest and how does it improve on a single decision tree?",
+                Set.of("ml"), false, Set.of("ensemble", "bagging")));
+
+        q.add(new InterviewQuestion("Q422",
+                "What is K-means clustering? Walk me through how the algorithm works.",
+                Set.of("ml"), false, Set.of("centroid", "cluster")));
+
+        q.add(new InterviewQuestion("Q423",
+                "What is PCA (Principal Component Analysis) at a high level and why is it used?",
+                Set.of("ml"), false, Set.of("dimension", "variance")));
+
+        q.add(new InterviewQuestion("Q424",
+                "What is hyperparameter tuning? Name two methods for doing it.",
+                Set.of("ml"), false, Set.of("grid", "search")));
+
+        q.add(new InterviewQuestion("Q425",
+                "What is an A/B test? How do you determine if a result is statistically significant?",
+                Set.of("ml"), false, Set.of("significance", "control")));
+
+        q.add(new InterviewQuestion("Q426",
+                "What is model drift and how would you detect it in a production system?",
+                Set.of("ml"), false, Set.of("drift", "monitor")));
+
+        q.add(new InterviewQuestion("Q427",
+                "Your model performs well in training but poorly in production. What are the most likely causes?",
+                Set.of("ml"), true, Set.of("distribution", "leakage")));
+
+        q.add(new InterviewQuestion("Q428",
+                "What is tokenization in NLP and why is it a necessary preprocessing step?",
+                Set.of("ml"), false, Set.of("token", "text")));
+
+        // =========================
+        // DBA / Advanced SQL — Extended
+        // =========================
+        q.add(new InterviewQuestion("Q429",
+                "What is table partitioning in PostgreSQL? Give a use-case where it helps.",
+                Set.of("sql", "postgresql"), false, Set.of("partition", "range")));
+
+        q.add(new InterviewQuestion("Q430",
+                "What is VACUUM in PostgreSQL and why does it matter for performance?",
+                Set.of("sql", "postgresql"), false, Set.of("vacuum", "bloat")));
+
+        q.add(new InterviewQuestion("Q431",
+                "What is JSONB in PostgreSQL? When would you choose it over a normalised column?",
+                Set.of("sql", "postgresql"), false, Set.of("jsonb", "flexible")));
+
+        q.add(new InterviewQuestion("Q432",
+                "What is full-text search in PostgreSQL (tsvector, tsquery)? How does it differ from LIKE?",
+                Set.of("sql", "postgresql"), false, Set.of("tsvector", "search")));
+
+        q.add(new InterviewQuestion("Q433",
+                "What is a database sequence? Why are gaps in sequences normal and expected?",
+                Set.of("sql"), false, Set.of("sequence", "gap")));
+
+        q.add(new InterviewQuestion("Q434",
+                "What are the main PostgreSQL backup strategies and their trade-offs?",
+                Set.of("sql", "postgresql", "devops"), false, Set.of("pg_dump", "wal")));
+
+        q.add(new InterviewQuestion("Q435",
+                "What is replication lag? How do you detect and mitigate it?",
+                Set.of("sql", "postgresql"), false, Set.of("lag", "replica")));
+
+        q.add(new InterviewQuestion("Q436",
+                "What is advisory locking in PostgreSQL and when would you use it?",
+                Set.of("sql", "postgresql"), false, Set.of("advisory", "application")));
+
+        // =========================
+        // Security — Extended
+        // =========================
+        q.add(new InterviewQuestion("Q437",
+                "What is an SSRF (Server-Side Request Forgery) attack? Give an example.",
+                Set.of("security"), false, Set.of("internal", "request")));
+
+        q.add(new InterviewQuestion("Q438",
+                "What is a path traversal attack? How do you prevent it in a file upload endpoint?",
+                Set.of("security"), false, Set.of("traversal", "sanitize")));
+
+        q.add(new InterviewQuestion("Q439",
+                "How should you store secrets (API keys, DB passwords) in a production application?",
+                Set.of("security", "devops"), true, Set.of("vault", "env")));
+
+        q.add(new InterviewQuestion("Q440",
+                "What are HTTP security headers? Name three important ones and what they do.",
+                Set.of("security"), false, Set.of("hsts", "csp")));
+
+        q.add(new InterviewQuestion("Q441",
+                "What is rate limiting as a security measure and what attacks does it prevent?",
+                Set.of("security", "api"), true, Set.of("brute", "throttle")));
+
+        q.add(new InterviewQuestion("Q442",
+                "What is a supply chain attack? Give a real-world example.",
+                Set.of("security"), false, Set.of("dependency", "malicious")));
+
+        q.add(new InterviewQuestion("Q443",
+                "What is a dangerous CORS misconfiguration and what can an attacker do with it?",
+                Set.of("security", "api"), false, Set.of("wildcard", "origin")));
+
+        q.add(new InterviewQuestion("Q444",
+                "What is log injection and how do you prevent it?",
+                Set.of("security"), false, Set.of("sanitize", "inject")));
+
+        q.add(new InterviewQuestion("Q445",
+                "What is the difference between a vulnerability, an exploit, and a patch?",
+                Set.of("security"), false, Set.of("vulnerability", "exploit")));
+
+        q.add(new InterviewQuestion("Q446",
+                "What is zero-trust architecture at a high level?",
+                Set.of("security"), false, Set.of("verify", "trust")));
+
+        // =========================
+        // Embedded / Systems — Extended
+        // =========================
+        q.add(new InterviewQuestion("Q447",
+                "What is memory-mapped I/O in embedded systems?",
+                Set.of("embedded"), false, Set.of("register", "mapped")));
+
+        q.add(new InterviewQuestion("Q448",
+                "What is a watchdog timer and why is it critical in embedded devices?",
+                Set.of("embedded"), false, Set.of("watchdog", "reset")));
+
+        q.add(new InterviewQuestion("Q449",
+                "What is DMA (Direct Memory Access) and when would you use it?",
+                Set.of("embedded"), false, Set.of("dma", "cpu")));
+
+        q.add(new InterviewQuestion("Q450",
+                "What is the difference between SPI, I2C, and UART communication protocols?",
+                Set.of("embedded"), true, Set.of("spi", "uart")));
+
+        q.add(new InterviewQuestion("Q451",
+                "What is a bootloader in embedded systems? What does it do before the main application runs?",
+                Set.of("embedded"), false, Set.of("bootloader", "firmware")));
+
+        q.add(new InterviewQuestion("Q452",
+                "What is power management in embedded systems and how do sleep modes help?",
+                Set.of("embedded"), false, Set.of("sleep", "consumption")));
+
+        q.add(new InterviewQuestion("Q453",
+                "What makes unit testing in embedded systems harder than in regular software?",
+                Set.of("embedded", "testing"), false, Set.of("hardware", "mock")));
+
+        q.add(new InterviewQuestion("Q454",
+                "What is a linker script in C/C++ embedded development and what does it control?",
+                Set.of("embedded"), false, Set.of("linker", "memory")));
 
         // =========================
         //// MCQ (Phase C)
@@ -1579,6 +2513,209 @@ public class QuestionBankService {
                     (Set<String>) row[5]
             ));
         }
+
+        // =========================
+        // Java 21 Modern Features
+        // =========================
+        q.add(new InterviewQuestion("Q455",
+                "What are Java records? When would you use one instead of a regular class?",
+                Set.of("java"), true, Set.of("record", "immutable")));
+
+        q.add(new InterviewQuestion("Q456",
+                "What are sealed classes in Java? What problem do they solve for modelling domain types?",
+                Set.of("java"), false, Set.of("sealed", "permits")));
+
+        q.add(new InterviewQuestion("Q457",
+                "What are virtual threads (Project Loom) in Java 21? How do they differ from platform threads?",
+                Set.of("java", "concurrency"), true, Set.of("virtual", "lightweight")));
+
+        q.add(new InterviewQuestion("Q458",
+                "What is pattern matching for instanceof (Java 16+)? Give a before/after example.",
+                Set.of("java"), false, Set.of("instanceof", "pattern")));
+
+        q.add(new InterviewQuestion("Q459",
+                "What is a switch expression in Java (Java 14+)? How is it different from a switch statement?",
+                Set.of("java"), false, Set.of("switch", "expression")));
+
+        q.add(new InterviewQuestion("Q460",
+                "What are text blocks in Java (Java 15+)? Give a use case.",
+                Set.of("java"), false, Set.of("text", "block")));
+
+        // =========================
+        // Advanced Spring / Spring Boot
+        // =========================
+        q.add(new InterviewQuestion("Q461",
+                "What is Spring WebFlux? When would you choose it over Spring MVC?",
+                Set.of("spring boot", "concurrency"), true, Set.of("reactive", "nonblocking")));
+
+        q.add(new InterviewQuestion("Q462",
+                "What is a Spring Boot starter? What does spring-boot-starter-web include?",
+                Set.of("spring boot"), false, Set.of("starter", "autoconfigure")));
+
+        q.add(new InterviewQuestion("Q463",
+                "What does @Scheduled do in Spring? What are common pitfalls?",
+                Set.of("spring boot"), false, Set.of("scheduled", "cron")));
+
+        q.add(new InterviewQuestion("Q464",
+                "Explain Spring Boot Externalized Configuration: what is the property loading order?",
+                Set.of("spring boot"), false, Set.of("environment", "override")));
+
+        q.add(new InterviewQuestion("Q465",
+                "What is Spring AOP? Explain @Aspect, pointcut, and advice with a real use-case.",
+                Set.of("spring"), false, Set.of("aspect", "advice")));
+
+        q.add(new InterviewQuestion("Q466",
+                "What is the difference between @Transactional(readOnly=true) and a regular @Transactional?",
+                Set.of("spring", "sql"), true, Set.of("readonly", "flush")));
+
+        q.add(new InterviewQuestion("Q467",
+                "How would you implement distributed locking in a Spring Boot application (Redis / DB-level)?",
+                Set.of("spring boot", "redis", "concurrency"), false, Set.of("lock", "redis")));
+
+        q.add(new InterviewQuestion("Q468",
+                "What is Spring Retry? When would you annotate a method with @Retryable?",
+                Set.of("spring boot", "api"), false, Set.of("retry", "backoff")));
+
+        q.add(new InterviewQuestion("Q469",
+                "Explain how Spring Boot health checks work. What is the difference between liveness and readiness probes?",
+                Set.of("spring boot", "devops", "kubernetes"), true, Set.of("liveness", "readiness")));
+
+        // =========================
+        // System Design (Junior-Mid Level)
+        // =========================
+        q.add(new InterviewQuestion("Q470",
+                "Design a notification system (email/SMS/push). What are the key components and why use a queue?",
+                Set.of("design patterns", "kafka", "microservices"), true, Set.of("queue", "decouple")));
+
+        q.add(new InterviewQuestion("Q471",
+                "What is consistent hashing? Where is it used and why?",
+                Set.of("microservices", "redis"), false, Set.of("consistent", "node")));
+
+        q.add(new InterviewQuestion("Q472",
+                "What is the token bucket algorithm for rate limiting? How does it differ from leaky bucket?",
+                Set.of("api", "design patterns"), true, Set.of("token", "bucket")));
+
+        q.add(new InterviewQuestion("Q473",
+                "What is event sourcing? How does it differ from storing only current state?",
+                Set.of("design patterns", "microservices"), false, Set.of("event", "audit")));
+
+        q.add(new InterviewQuestion("Q474",
+                "What is CQRS? When does separating read and write models make sense?",
+                Set.of("design patterns", "microservices"), false, Set.of("command", "query")));
+
+        q.add(new InterviewQuestion("Q475",
+                "Design a simple file upload service: what validations, storage options, and security concerns would you address?",
+                Set.of("api", "security", "aws"), true, Set.of("size", "type")));
+
+        q.add(new InterviewQuestion("Q476",
+                "What is the two-phase commit (2PC) and why is it avoided in modern distributed systems?",
+                Set.of("microservices", "sql"), false, Set.of("coordinator", "blocking")));
+
+        q.add(new InterviewQuestion("Q477",
+                "How would you design a webhook system? What guarantees must you provide to consumers?",
+                Set.of("api", "microservices"), false, Set.of("retry", "idempotent")));
+
+        q.add(new InterviewQuestion("Q478",
+                "What is the outbox pattern? How does it solve the dual-write problem?",
+                Set.of("microservices", "kafka", "sql"), false, Set.of("outbox", "transaction")));
+
+        // =========================
+        // Advanced SQL / PostgreSQL
+        // =========================
+        q.add(new InterviewQuestion("Q479",
+                "What is a partial index in PostgreSQL? Give a practical example of when it reduces index size.",
+                Set.of("sql", "postgresql"), false, Set.of("partial", "where")));
+
+        q.add(new InterviewQuestion("Q480",
+                "What is row-level security (RLS) in PostgreSQL and why is it useful for multi-tenant apps?",
+                Set.of("sql", "postgresql", "security"), false, Set.of("policy", "tenant")));
+
+        q.add(new InterviewQuestion("Q481",
+                "Explain the difference between SERIAL and IDENTITY columns in PostgreSQL.",
+                Set.of("sql", "postgresql"), false, Set.of("sequence", "identity")));
+
+        q.add(new InterviewQuestion("Q482",
+                "What is a covering index? How does it avoid a heap fetch?",
+                Set.of("sql", "postgresql"), false, Set.of("covering", "include")));
+
+        q.add(new InterviewQuestion("Q483",
+                "When would you use jsonb in PostgreSQL instead of a separate table? What are the trade-offs?",
+                Set.of("sql", "postgresql"), true, Set.of("jsonb", "flexible")));
+
+        // =========================
+        // DevOps / Production Readiness
+        // =========================
+        q.add(new InterviewQuestion("Q484",
+                "What is the difference between a liveness probe and a readiness probe in Kubernetes? What happens when each fails?",
+                Set.of("kubernetes", "devops"), true, Set.of("liveness", "readiness")));
+
+        q.add(new InterviewQuestion("Q485",
+                "What is a Helm chart? What problem does it solve on top of plain Kubernetes YAML?",
+                Set.of("kubernetes", "devops"), false, Set.of("helm", "template")));
+
+        q.add(new InterviewQuestion("Q486",
+                "What is a blue/green deployment? What is its main advantage over a rolling update?",
+                Set.of("ci/cd", "devops"), true, Set.of("blue", "instant")));
+
+        q.add(new InterviewQuestion("Q487",
+                "What is a canary release? How do you roll it back if metrics degrade?",
+                Set.of("ci/cd", "devops"), false, Set.of("canary", "rollback")));
+
+        q.add(new InterviewQuestion("Q488",
+                "What is SLI/SLO/SLA? How do error budgets help engineering teams make release decisions?",
+                Set.of("devops"), false, Set.of("slo", "budget")));
+
+        q.add(new InterviewQuestion("Q489",
+                "What is distributed tracing (OpenTelemetry/Jaeger)? What does a trace ID let you do across services?",
+                Set.of("devops", "microservices"), true, Set.of("trace", "correlation")));
+
+        q.add(new InterviewQuestion("Q490",
+                "What is a secrets manager (Vault, AWS Secrets Manager)? Why is it better than environment variables for secrets?",
+                Set.of("devops", "security"), true, Set.of("secret", "rotate")));
+
+        // =========================
+        // Real Interview Scenario (Senior-style applied)
+        // =========================
+        q.add(new InterviewQuestion("Q491",
+                "Your service is hitting the database on every request to fetch the same config table. The table changes once a day. How do you fix this with minimal code?",
+                Set.of("spring boot", "redis", "sql"), true, Set.of("cache", "ttl")));
+
+        q.add(new InterviewQuestion("Q492",
+                "A background job runs every night and sometimes overlaps with itself on a second server node. How do you ensure it only runs once across all nodes?",
+                Set.of("spring boot", "redis", "sql"), true, Set.of("lock", "distributed")));
+
+        q.add(new InterviewQuestion("Q493",
+                "Your team is about to deploy a database migration that drops a column still used by the old application version. What is the safe multi-step approach?",
+                Set.of("sql", "devops", "microservices"), true, Set.of("backward", "migration")));
+
+        q.add(new InterviewQuestion("Q494",
+                "A new developer on your team adds a @Cacheable annotation to a method that has side effects. What do you flag in code review?",
+                Set.of("spring boot", "design patterns"), true, Set.of("side", "cache")));
+
+        q.add(new InterviewQuestion("Q495",
+                "Your microservice calls 3 external APIs in sequence. Each call takes ~200ms. How would you reduce the total latency?",
+                Set.of("java", "concurrency", "microservices"), true, Set.of("parallel", "completablefuture")));
+
+        q.add(new InterviewQuestion("Q496",
+                "You need to export 5 million rows to CSV from PostgreSQL without running out of memory. How do you stream the data?",
+                Set.of("sql", "postgresql", "java"), false, Set.of("cursor", "stream")));
+
+        q.add(new InterviewQuestion("Q497",
+                "A user resets their password but their old sessions remain active. How do you invalidate all existing tokens on password change?",
+                Set.of("security", "api"), true, Set.of("token", "version")));
+
+        q.add(new InterviewQuestion("Q498",
+                "Your REST API returns sensitive data that changes per user. Why must you set Cache-Control: no-store and what happens if you don't?",
+                Set.of("api", "security"), true, Set.of("cache", "sensitive")));
+
+        q.add(new InterviewQuestion("Q499",
+                "You are asked to add soft-delete to a table that already has a UNIQUE constraint on email. What problem appears and how do you solve it?",
+                Set.of("sql", "design patterns"), true, Set.of("deleted", "unique")));
+
+        q.add(new InterviewQuestion("Q500",
+                "Explain the difference between optimistic and pessimistic locking in the context of a bank transfer: which do you choose and why?",
+                Set.of("sql", "concurrency", "hibernate"), true, Set.of("optimistic", "version")));
+
         return q;
     }
 }
