@@ -74,4 +74,14 @@ public class AiEvaluationProperties {
     public boolean isConfigured() {
         return enabled && apiKey != null && !apiKey.isBlank();
     }
+
+    /**
+     * The "reasoning" parameter is only accepted by OpenAI's reasoning models
+     * (o-series, gpt-5 family). Sending it to gpt-4o etc. causes a 400 error.
+     */
+    public boolean supportsReasoningEffort() {
+        if (model == null) return false;
+        String m = model.toLowerCase();
+        return m.startsWith("o1") || m.startsWith("o3") || m.startsWith("o4") || m.startsWith("gpt-5");
+    }
 }

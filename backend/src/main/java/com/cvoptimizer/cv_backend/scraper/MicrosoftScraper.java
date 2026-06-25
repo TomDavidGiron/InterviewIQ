@@ -33,8 +33,7 @@ public class MicrosoftScraper {
         try (Playwright playwright = Playwright.create()) {
             Browser browser = playwright.chromium().launch(new BrowserType.LaunchOptions()
                     .setHeadless(true)
-                    .addArg("--no-sandbox")
-                    .addArg("--disable-dev-shm-usage"));
+                    .setArgs(List.of("--no-sandbox", "--disable-dev-shm-usage")));
 
             BrowserContext context = browser.newContext(new Browser.NewContextOptions()
                     .setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) "

@@ -63,7 +63,9 @@ public class AiFeedbackService {
 
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("model", properties.getModel());
-        payload.put("reasoning", Map.of("effort", properties.getReasoningEffort()));
+        if (properties.supportsReasoningEffort()) {
+            payload.put("reasoning", Map.of("effort", properties.getReasoningEffort()));
+        }
         payload.put("max_output_tokens", Math.max(500, properties.getMaxOutputTokens()));
         payload.put("input", List.of(
                 Map.of("role", "developer", "content", buildDeveloperPrompt()),

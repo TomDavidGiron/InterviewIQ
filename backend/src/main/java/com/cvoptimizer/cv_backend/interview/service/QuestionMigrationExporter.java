@@ -13,13 +13,13 @@ import java.nio.file.Path;
 import java.util.List;
 
 /**
- * One-shot SQL migration generator. Run once to produce V9__seed_questions.sql,
+ * One-shot SQL migration generator. Run once to produce V10__seed_questions.sql,
  * then delete this class along with QuestionDbSeeder and getBackendJuniorBank().
  *
  * Usage:
  *   mvn spring-boot:run -Dspring-boot.run.jvmArguments="-Dspring.profiles.active=export-sql"
  *
- * Output: V9__seed_questions.sql in the project root.
+ * Output: V10__seed_questions.sql in the project root.
  * Move it to: src/main/resources/db/migration/
  */
 @Component
@@ -37,7 +37,7 @@ public class QuestionMigrationExporter implements ApplicationRunner {
         List<QuestionEntity> all = questionRepository.findAll(Sort.by("id"));
 
         StringBuilder sql = new StringBuilder();
-        sql.append("-- V9__seed_questions.sql\n");
+        sql.append("-- V10__seed_questions.sql\n");
         sql.append("-- Full question bank seed. Safe to re-run (ON CONFLICT DO NOTHING).\n\n");
         sql.append("INSERT INTO question\n");
         sql.append("    (id, text, type, tags, required_keywords, critical,\n");
@@ -63,7 +63,7 @@ public class QuestionMigrationExporter implements ApplicationRunner {
 
         sql.append("ON CONFLICT (id) DO NOTHING;\n");
 
-        Path out = Path.of("V9__seed_questions.sql");
+        Path out = Path.of("V10__seed_questions.sql");
         Files.writeString(out, sql.toString());
         System.out.printf("[QuestionMigrationExporter] Wrote %d questions to %s%n",
                 all.size(), out.toAbsolutePath());
