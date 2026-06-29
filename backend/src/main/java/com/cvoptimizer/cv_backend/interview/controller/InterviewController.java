@@ -4,6 +4,7 @@ import com.cvoptimizer.cv_backend.interview.dto.*;
 import com.cvoptimizer.cv_backend.interview.service.InterviewEngineService;
 import com.cvoptimizer.cv_backend.interview.service.InterviewHistoryService;
 import com.cvoptimizer.cv_backend.interview.skillgraph.dto.SkillGraphResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -11,7 +12,6 @@ import com.cvoptimizer.cv_backend.interview.service.SkillGraphService;
 
 import java.util.List;
 
-@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/interview")
 public class InterviewController {
@@ -37,14 +37,14 @@ public class InterviewController {
     }
 
     @PostMapping("/start")
-    public ResponseEntity<InterviewStartResponse> start(@RequestBody InterviewStartRequest request,
+    public ResponseEntity<InterviewStartResponse> start(@Valid @RequestBody InterviewStartRequest request,
                                                         Authentication authentication) {
         request.setUserId(authentication != null ? authentication.getName() : "anonymous");
         return ResponseEntity.ok(engine.start(request));
     }
 
     @PostMapping("/job-specific")
-    public ResponseEntity<InterviewStartResponse> startJobSpecific(@RequestBody InterviewStartRequest request,
+    public ResponseEntity<InterviewStartResponse> startJobSpecific(@Valid @RequestBody InterviewStartRequest request,
                                                                    Authentication authentication) {
         request.setUserId(authentication != null ? authentication.getName() : "anonymous");
         return ResponseEntity.ok(engine.startJobSpecificInterview(request));
@@ -53,7 +53,7 @@ public class InterviewController {
     @PostMapping("/{sessionId}/answer")
     public ResponseEntity<InterviewAnswerResponse> answer(
             @PathVariable String sessionId,
-            @RequestBody InterviewAnswerRequest request
+            @Valid @RequestBody InterviewAnswerRequest request
     ) {
         return ResponseEntity.ok(engine.answer(sessionId, request));
     }

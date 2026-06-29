@@ -5,13 +5,13 @@ import com.cvoptimizer.cv_backend.entity.JobDescription;
 import com.cvoptimizer.cv_backend.model.ScraperResult;
 import com.cvoptimizer.cv_backend.repository.JobDescriptionRepository;
 import com.cvoptimizer.cv_backend.scraper.JobScraperRouter;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/scrape")
-@CrossOrigin(origins = "*")
 public class JobScraperController {
 
     private final JobDescriptionRepository jobDescriptionRepository;
@@ -29,7 +29,7 @@ public class JobScraperController {
     }
 
     @PostMapping("/manual-input")
-    public ScraperResult handleManualInput(@RequestBody ManualJobInputDTO input) {
+    public ScraperResult handleManualInput(@Valid @RequestBody ManualJobInputDTO input) {
         JobDescription job = new JobDescription();
         job.setTitle(input.getTitle());
         job.setCompany(input.getCompany());

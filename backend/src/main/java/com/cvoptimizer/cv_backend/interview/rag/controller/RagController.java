@@ -5,12 +5,12 @@ import com.cvoptimizer.cv_backend.interview.rag.dto.RagSearchRequest;
 import com.cvoptimizer.cv_backend.interview.rag.dto.RagSearchResponse;
 import com.cvoptimizer.cv_backend.interview.rag.model.KnowledgeChunk;
 import com.cvoptimizer.cv_backend.interview.rag.service.RagService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/rag")
 public class RagController {
@@ -22,7 +22,7 @@ public class RagController {
     }
 
     @PostMapping("/search")
-    public ResponseEntity<RagSearchResponse> search(@RequestBody RagSearchRequest request) {
+    public ResponseEntity<RagSearchResponse> search(@Valid @RequestBody RagSearchRequest request) {
         String query = request == null ? null : request.getQuery();
         Integer limit = request == null ? null : request.getLimit();
 

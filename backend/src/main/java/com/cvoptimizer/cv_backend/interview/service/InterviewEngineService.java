@@ -843,8 +843,9 @@ public class InterviewEngineService {
             session.setTagMistakes(map);
         }
         for (String t : q.getTags()) {
-            if (t == null) continue;
-            map.put(t, map.getOrDefault(t, 0) + 1);
+            if (t == null || t.isBlank()) continue;
+            String normalized = t.trim().toLowerCase();
+            map.put(normalized, map.getOrDefault(normalized, 0) + 1);
         }
     }
 
@@ -940,7 +941,8 @@ public class InterviewEngineService {
             if (q == null || q.getTags() == null) continue;
             for (String t : q.getTags()) {
                 if (t == null || t.isBlank()) continue;
-                tagCounts.put(t, tagCounts.getOrDefault(t, 0) + 1);
+                String normalized = t.trim().toLowerCase();
+                tagCounts.put(normalized, tagCounts.getOrDefault(normalized, 0) + 1);
             }
         }
 
