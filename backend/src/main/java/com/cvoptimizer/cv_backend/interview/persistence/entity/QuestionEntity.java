@@ -4,6 +4,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.util.Arrays;
@@ -25,11 +27,13 @@ public class QuestionEntity {
     @Column(length = 10, nullable = false)
     private String type = "OPEN";
 
-    @Column(columnDefinition = "TEXT")
-    private String tags;
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(columnDefinition = "text[]")
+    private String[] tags;
 
-    @Column(name = "required_keywords", columnDefinition = "TEXT")
-    private String requiredKeywords;
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "required_keywords", columnDefinition = "text[]")
+    private String[] requiredKeywords;
 
     private boolean critical;
 
@@ -60,11 +64,11 @@ public class QuestionEntity {
     public String getType() { return type; }
     public void setType(String type) { this.type = type; }
 
-    public String getTags() { return tags; }
-    public void setTags(String tags) { this.tags = tags; }
+    public String[] getTags() { return tags; }
+    public void setTags(String[] tags) { this.tags = tags; }
 
-    public String getRequiredKeywords() { return requiredKeywords; }
-    public void setRequiredKeywords(String requiredKeywords) { this.requiredKeywords = requiredKeywords; }
+    public String[] getRequiredKeywords() { return requiredKeywords; }
+    public void setRequiredKeywords(String[] requiredKeywords) { this.requiredKeywords = requiredKeywords; }
 
     public boolean isCritical() { return critical; }
     public void setCritical(boolean critical) { this.critical = critical; }
@@ -88,18 +92,18 @@ public class QuestionEntity {
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 
     public Set<String> parsedTags() {
-        return parseCsv(tags);
+        return toSet(tags);
     }
 
     public Set<String> parsedKeywords() {
-        return parseCsv(requiredKeywords);
+        return toSet(requiredKeywords);
     }
 
-    private static Set<String> parseCsv(String csv) {
-        if (csv == null || csv.isBlank()) return new LinkedHashSet<>();
-        return Arrays.stream(csv.split(","))
+    private static Set<String> toSet(String[] values) {
+        if (values == null) return new LinkedHashSet<>();
+        return Arrays.stream(values)
+                .filter(s -> s != null && !s.isBlank())
                 .map(String::trim)
-                .filter(s -> !s.isEmpty())
                 .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 }

@@ -58,8 +58,8 @@ public class QuestionDbSeeder implements ApplicationRunner {
         e.setId(q.getId());
         e.setText(q.getText());
         e.setType(q.getType() != null ? q.getType().name() : QuestionType.OPEN.name());
-        e.setTags(joinCsv(q.getTags()));
-        e.setRequiredKeywords(joinCsv(q.getRequiredKeywords()));
+        e.setTags(toArray(q.getTags()));
+        e.setRequiredKeywords(toArray(q.getRequiredKeywords()));
         e.setCritical(q.isCritical());
         e.setCorrectOptionIndex(q.getCorrectOptionIndex());
         e.setStarterCode(q.getStarterCode());
@@ -74,8 +74,8 @@ public class QuestionDbSeeder implements ApplicationRunner {
         return e;
     }
 
-    private String joinCsv(Set<String> set) {
-        if (set == null || set.isEmpty()) return "";
-        return String.join(",", set);
+    private String[] toArray(Set<String> set) {
+        if (set == null || set.isEmpty()) return new String[0];
+        return set.toArray(new String[0]);
     }
 }
