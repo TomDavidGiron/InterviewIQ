@@ -31,6 +31,12 @@ public class InterviewController {
         return ResponseEntity.ok(skillGraphService.getSkillGraph(userId));
     }
 
+    @DeleteMapping("/users/{userId}/skill-graph")
+    public ResponseEntity<Void> resetSkillGraph(@PathVariable String userId) {
+        skillGraphService.resetSkillGraph(userId);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{sessionId}/skill-graph")
     public ResponseEntity<SkillGraphResponse> skillGraphBySession(@PathVariable String sessionId) {
         return ResponseEntity.ok(skillGraphService.getSkillGraphBySessionId(sessionId));

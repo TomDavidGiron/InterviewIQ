@@ -53,3 +53,7 @@ export async function getSkillGraphByUser(userId) {
   );
   return response.data;
 }
+
+export async function resetSkillGraph(userId) {
+  await apiClient.delete(`/api/interview/users/${userId}/skill-graph`);
+}

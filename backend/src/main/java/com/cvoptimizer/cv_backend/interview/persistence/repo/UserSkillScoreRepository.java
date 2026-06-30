@@ -11,4 +11,6 @@ public interface UserSkillScoreRepository extends JpaRepository<UserSkillScoreEn
     Optional<UserSkillScoreEntity> findByUserIdAndSkill(String userId, String skill);
 
     List<UserSkillScoreEntity> findByUserIdOrderByScoreDescSkillAsc(String userId);
+
+    void deleteByUserId(String userId);
 }

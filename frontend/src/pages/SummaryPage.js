@@ -11,7 +11,7 @@ import {
   Typography
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
-import { getSkillGraphBySession, getSummary } from "../api/interviewApi";
+import { getSkillGraphBySession, getSummary, resetSkillGraph } from "../api/interviewApi";
 
 export default function SummaryPage() {
   const navigate = useNavigate();
@@ -21,6 +21,18 @@ export default function SummaryPage() {
   const [skillGraph, setSkillGraph] = useState(null);
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState("");
+  const [resetDone, setResetDone] = useState(false);
+
+  const handleResetSkillGraph = async () => {
+    const userId = skillGraph?.userId || "anonymous";
+    try {
+      await resetSkillGraph(userId);
+      setSkillGraph(null);
+      setResetDone(true);
+    } catch {
+      // silently ignore
+    }
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -285,6 +297,17 @@ export default function SummaryPage() {
           <Button variant="outlined" onClick={() => navigate("/history")}>
             Go to History
           </Button>
+
+          {(skillGraph || resetDone) && (
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={handleResetSkillGraph}
+              disabled={resetDone}
+            >
+              {resetDone ? "Skill graph reset" : "Reset skill graph"}
+            </Button>
+          )}
         </Box>
       </Paper>
     </Container>

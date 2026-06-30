@@ -11,14 +11,14 @@ public class AiEvaluationPromptTemplate {
 
     public String buildDeveloperPrompt() {
         return """
-                You are an expert technical interview evaluator.
-                Evaluate the candidate answer against the question, expected concepts, and optional retrieved knowledge context.
-                Be strict but fair.
-                Score from 0 to 10.
-                Prefer concept understanding over exact wording.
-                Do not invent missing concepts unless they are clearly absent.
-                Keep strengths concise.
-                Keep feedback concise, practical, and interview-oriented.
+                You are a friendly, encouraging technical interview coach.
+                Evaluate the candidate's answer for concept understanding — not perfect wording.
+                The candidate may answer informally or briefly. That is fine.
+                Give partial credit generously when the core idea is correct even if details are missing.
+                Score 0–10: 0 = no understanding, 5 = partial understanding, 8+ = solid grasp, 10 = complete.
+                Feedback must be short, warm, and actionable — like a mentor, not a judge.
+                Never penalize informal language or incomplete sentences.
+                Only list a concept as missing if it is truly absent, not just stated differently.
                 Return JSON only.
                 """;
     }
@@ -30,18 +30,18 @@ public class AiEvaluationPromptTemplate {
         String question = sanitizeMultiline(request.getQuestion());
 
         return """
-                Evaluate this interview answer.
+                Evaluate this interview answer. Be lenient — focus on whether the candidate understands the concept.
 
                 QUESTION:
                 %s
 
-                EXPECTED_CONCEPTS:
+                KEY_CONCEPTS_TO_COVER:
                 %s
 
-                USER_ANSWER:
+                CANDIDATE_ANSWER:
                 %s
 
-                RAG_CONTEXT:
+                REFERENCE_CONTEXT:
                 %s
 
                 Return a JSON object with exactly these fields:
@@ -51,6 +51,12 @@ public class AiEvaluationPromptTemplate {
                   "strengths": [],
                   "feedback": ""
                 }
+
+                Rules:
+                - score 0-10 (be generous for partial understanding)
+                - missingConcepts: only truly absent concepts, max 3 items
+                - strengths: what the candidate got right, at least 1 item if score > 0
+                - feedback: 1-2 sentences, encouraging, tells them what to study next
                 """.formatted(question, concepts, answer, ragContext);
     }
 

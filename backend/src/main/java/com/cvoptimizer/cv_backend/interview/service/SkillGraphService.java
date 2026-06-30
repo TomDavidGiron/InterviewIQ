@@ -119,6 +119,11 @@ public class SkillGraphService {
         return getSkillGraph(session.getUserId());
     }
 
+    @Transactional
+    public void resetSkillGraph(String userId) {
+        userSkillScoreRepository.deleteByUserId(normalizeUserId(userId));
+    }
+
     private String normalizeUserId(String userId) {
         if (userId == null || userId.isBlank()) {
             return "anonymous";
