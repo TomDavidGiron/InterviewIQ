@@ -58,7 +58,7 @@ export default function Interview() {
     return Math.min(100, (questionIndex / totalQuestions) * 100);
   }, [questionIndex, totalQuestions]);
 
-  const handleSubmitAnswer = async () => {
+  const handleSubmitAnswer = async (skip = false) => {
     if (!sessionId) return;
 
     const payload =
@@ -68,10 +68,10 @@ export default function Interview() {
               selectedOptionIndex === null ? "" : String(selectedOptionIndex)
           }
         : {
-            answerText: answerText.trim()
+            answerText: skip ? "" : answerText.trim()
           };
 
-    if (!payload.answerText) {
+    if (!skip && !payload.answerText) {
       setPageError("Please enter an answer before submitting.");
       return;
     }
@@ -249,7 +249,7 @@ export default function Interview() {
         <Box sx={{ display: "flex", gap: 2, mt: 2, flexWrap: "wrap" }}>
           <Button
             variant="contained"
-            onClick={handleSubmitAnswer}
+            onClick={() => handleSubmitAnswer(false)}
             disabled={loading}
           >
             {loading ? <CircularProgress size={22} /> : "Submit"}
@@ -257,10 +257,18 @@ export default function Interview() {
 
           <Button
             variant="outlined"
+            onClick={() => handleSubmitAnswer(true)}
+            disabled={loading}
+          >
+            Skip
+          </Button>
+
+          <Button
+            variant="text"
             onClick={() => navigate(`/summary/${sessionId}`)}
             disabled={loading}
           >
-            Go to summary
+            End interview
           </Button>
         </Box>
       </Paper>
