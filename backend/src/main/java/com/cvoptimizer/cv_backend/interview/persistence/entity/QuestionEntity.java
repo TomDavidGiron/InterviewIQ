@@ -46,6 +46,9 @@ public class QuestionEntity {
     @Column(name = "starter_code", columnDefinition = "TEXT")
     private String starterCode;
 
+    @Column(length = 10)
+    private String difficulty = "MEDIUM";
+
     @Column(length = 50, nullable = false)
     private String source = "question_bank";
 
@@ -81,6 +84,9 @@ public class QuestionEntity {
 
     public String getStarterCode() { return starterCode; }
     public void setStarterCode(String starterCode) { this.starterCode = starterCode; }
+
+    public String getDifficulty() { return difficulty; }
+    public void setDifficulty(String difficulty) { this.difficulty = difficulty; }
 
     public String getSource() { return source; }
     public void setSource(String source) { this.source = source; }

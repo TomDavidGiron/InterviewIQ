@@ -6,19 +6,18 @@ import java.util.Set;
 public class InterviewQuestion {
     private String id;
     private String text;
-    private Set<String> tags;              // e.g. sql, spring, docker
-    private boolean critical;              // if true -> can fail session
-    private Set<String> requiredKeywords;  // rubric for OPEN/CODE (MVP)
+    private Set<String> tags;
+    private boolean critical;
+    private Set<String> requiredKeywords;
 
-    // Phase C
-    private QuestionType type = QuestionType.OPEN; // default
-    private List<String> options;                  // for MCQ
-    private Integer correctOptionIndex;            // for MCQ (0-based)
-    private String starterCode;                    // for CODE (optional)
+    private QuestionType type = QuestionType.OPEN;
+    private List<String> options;
+    private Integer correctOptionIndex;
+    private String starterCode;
+    private String difficulty = "MEDIUM"; // EASY, MEDIUM, HARD
 
     public InterviewQuestion() {}
 
-    // ✅ Existing constructor (OPEN question) - keeps your current bank working
     public InterviewQuestion(String id,
                              String text,
                              Set<String> tags,
@@ -30,6 +29,16 @@ public class InterviewQuestion {
         this.critical = critical;
         this.requiredKeywords = requiredKeywords;
         this.type = QuestionType.OPEN;
+    }
+
+    public InterviewQuestion(String id,
+                             String text,
+                             Set<String> tags,
+                             boolean critical,
+                             Set<String> requiredKeywords,
+                             String difficulty) {
+        this(id, text, tags, critical, requiredKeywords);
+        this.difficulty = difficulty;
     }
 
     // ✅ NEW constructor for MCQ (this fixes your error)
@@ -92,4 +101,7 @@ public class InterviewQuestion {
 
     public String getStarterCode() { return starterCode; }
     public void setStarterCode(String starterCode) { this.starterCode = starterCode; }
+
+    public String getDifficulty() { return difficulty; }
+    public void setDifficulty(String difficulty) { this.difficulty = difficulty; }
 }

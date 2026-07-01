@@ -13,13 +13,13 @@ import java.nio.file.Path;
 import java.util.List;
 
 /**
- * One-shot SQL migration generator. Run once to produce V11__seed_questions.sql,
+ * One-shot SQL migration generator. Run once to produce V12__seed_questions.sql,
  * then delete this class along with QuestionDbSeeder and getBackendJuniorBank().
  *
  * Usage:
  *   mvn spring-boot:run -Dspring-boot.run.jvmArguments="-Dspring.profiles.active=export-sql"
  *
- * Output: V11__seed_questions.sql in the project root.
+ * Output: V12__seed_questions.sql in the project root.
  * Move it to: src/main/resources/db/migration/
  */
 @Component
@@ -37,18 +37,19 @@ public class QuestionMigrationExporter implements ApplicationRunner {
         List<QuestionEntity> all = questionRepository.findAll(Sort.by("id"));
 
         StringBuilder sql = new StringBuilder();
-        sql.append("-- V11__seed_questions.sql\n");
+        sql.append("-- V12__seed_questions.sql\n");
         sql.append("-- Full question bank seed. Safe to re-run (ON CONFLICT DO NOTHING).\n\n");
         sql.append("INSERT INTO question\n");
         sql.append("    (id, text, type, tags, required_keywords, critical,\n");
-        sql.append("     options, correct_option_index, starter_code, source, status, created_at)\n");
+        sql.append("     options, correct_option_index, starter_code, difficulty, source, status, created_at)\n");
         sql.append("VALUES\n");
 
         for (int i = 0; i < all.size(); i++) {
             QuestionEntity q = all.get(i);
             String sep = (i < all.size() - 1) ? "," : "";
+            String difficulty = q.getDifficulty() != null ? q.getDifficulty() : "MEDIUM";
 
-            sql.append(String.format("(%s, %s, '%s', %s, %s, %b, %s, %s, %s, 'question_bank', 'ACTIVE', NOW())%s%n",
+            sql.append(String.format("(%s, %s, '%s', %s, %s, %b, %s, %s, %s, '%s', 'question_bank', 'ACTIVE', NOW())%s%n",
                     lit(q.getId()),
                     lit(q.getText()),
                     q.getType(),
@@ -58,12 +59,13 @@ public class QuestionMigrationExporter implements ApplicationRunner {
                     lit(q.getOptions()),
                     q.getCorrectOptionIndex() == null ? "NULL" : q.getCorrectOptionIndex(),
                     lit(q.getStarterCode()),
+                    difficulty,
                     sep));
         }
 
         sql.append("ON CONFLICT (id) DO NOTHING;\n");
 
-        Path out = Path.of("V11__seed_questions.sql");
+        Path out = Path.of("V12__seed_questions.sql");
         Files.writeString(out, sql.toString());
         System.out.printf("[QuestionMigrationExporter] Wrote %d questions to %s%n",
                 all.size(), out.toAbsolutePath());

@@ -20,19 +20,23 @@ public class QuestionDbSeeder implements ApplicationRunner {
 
     private final QuestionRepository questionRepository;
     private final QuestionBankService questionBankService;
+    private final QuestionBankExpansion questionBankExpansion;
     private final ObjectMapper objectMapper;
 
     public QuestionDbSeeder(QuestionRepository questionRepository,
                             QuestionBankService questionBankService,
+                            QuestionBankExpansion questionBankExpansion,
                             ObjectMapper objectMapper) {
         this.questionRepository = questionRepository;
         this.questionBankService = questionBankService;
+        this.questionBankExpansion = questionBankExpansion;
         this.objectMapper = objectMapper;
     }
 
     @Override
     public void run(ApplicationArguments args) {
-        List<InterviewQuestion> all = questionBankService.getBackendJuniorBank();
+        List<InterviewQuestion> all = new java.util.ArrayList<>(questionBankService.getBackendJuniorBank());
+        all.addAll(questionBankExpansion.getAll());
         int saved = 0;
         int skipped = 0;
 
@@ -63,6 +67,7 @@ public class QuestionDbSeeder implements ApplicationRunner {
         e.setCritical(q.isCritical());
         e.setCorrectOptionIndex(q.getCorrectOptionIndex());
         e.setStarterCode(q.getStarterCode());
+        e.setDifficulty(q.getDifficulty() != null ? q.getDifficulty() : "MEDIUM");
         e.setSource("question_bank");
         e.setStatus("ACTIVE");
         e.setCreatedAt(Instant.now());
