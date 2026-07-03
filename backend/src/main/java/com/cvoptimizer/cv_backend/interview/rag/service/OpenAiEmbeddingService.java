@@ -34,6 +34,11 @@ public class OpenAiEmbeddingService implements EmbeddingService {
     }
 
     @Override
+    public boolean isConfigured() {
+        return aiProperties.isConfigured();
+    }
+
+    @Override
     public float[] embed(String text) {
         if (text == null || text.isBlank()) {
             return new float[ragProperties.getEmbeddingDimension()];

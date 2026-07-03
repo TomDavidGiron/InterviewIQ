@@ -37,6 +37,12 @@ public class QuestionDbSeeder implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         List<InterviewQuestion> all = new java.util.ArrayList<>(questionBankService.getBackendJuniorBank());
         all.addAll(questionBankExpansion.getAll());
+
+        long existingCount = questionRepository.count();
+        if (existingCount >= all.size()) {
+            System.out.println("[QuestionDbSeeder] " + existingCount + " questions already in DB, skipping seed.");
+            return;
+        }
         int saved = 0;
         int skipped = 0;
 

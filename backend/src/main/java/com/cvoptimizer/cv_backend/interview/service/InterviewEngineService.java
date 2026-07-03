@@ -729,33 +729,31 @@ public class InterviewEngineService {
     }
 
     private int estimateDifficulty(InterviewQuestion q) {
-        if (q == null) {
-            return 2;
+        if (q == null) return 2;
+        if (q.getDifficulty() != null) {
+            return switch (q.getDifficulty().toUpperCase()) {
+                case "EASY"  -> 1;
+                case "HARD"  -> 3;
+                default      -> 2;
+            };
         }
-
+        // legacy heuristic fallback for questions without a difficulty tag
         int score = 0;
-
         if (q.getType() == QuestionType.CODE) {
             score += 2;
         } else if (q.getType() == QuestionType.MCQ) {
             score += 1;
         }
-
         if (q.getRequiredKeywords() != null) {
             int kw = q.getRequiredKeywords().size();
-            if (kw >= 5) {
-                score += 2;
-            } else if (kw >= 3) {
-                score += 1;
-            }
+            if (kw >= 5) score += 2;
+            else if (kw >= 3) score += 1;
         }
-
         String text = q.getText() == null ? "" : q.getText().toLowerCase();
         if (text.contains("design") || text.contains("tradeoff") || text.contains("scal") ||
                 text.contains("concurrency") || text.contains("distributed") || text.contains("optimiz")) {
             score += 2;
         }
-
         if (text.contains("difference between") || text.contains("compare") || text.contains("why")) {
             score += 1;
         }

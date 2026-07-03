@@ -29,6 +29,11 @@ public class RagService {
             return List.of();
         }
 
+        if (!embeddingService.isConfigured()) {
+            // Hash embeddings produce meaningless similarity scores — skip RAG entirely.
+            return List.of();
+        }
+
         int actualLimit = (limit == null || limit <= 0)
                 ? ragProperties.getSearchDefaultLimit()
                 : limit;
