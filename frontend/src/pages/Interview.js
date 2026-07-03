@@ -1,21 +1,21 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
-  Alert,
-  Box,
-  Button,
-  Chip,
-  CircularProgress,
-  Container,
-  Divider,
-  LinearProgress,
-  Paper,
-  TextField,
-  Typography
+  Alert, Box, Button, Chip, CircularProgress,
+  Container, LinearProgress, TextField, Typography
 } from "@mui/material";
 import { submitAnswer } from "../api/interviewApi";
 
-const TOTAL_QUESTIONS_FALLBACK = 10;
+const TOTAL_FALLBACK = 10;
+
+function difficultyColor(d) {
+  if (!d) return "#7a7a9e";
+  switch (d.toUpperCase()) {
+    case "EASY": return "#22d3a0";
+    case "HARD": return "#ff4d6a";
+    default: return "#f59e0b";
+  }
+}
 
 export default function Interview() {
   const location = useLocation();
@@ -33,321 +33,259 @@ export default function Interview() {
   const [loading, setLoading] = useState(false);
   const [pageError, setPageError] = useState("");
 
-  useEffect(() => {
-    if (!sessionId) {
-      navigate("/");
-    }
-  }, [sessionId, navigate]);
-
+  useEffect(() => { if (!sessionId) navigate("/"); }, [sessionId, navigate]);
   useEffect(() => {
     setAnswerText("");
     setSelectedOptionIndex(null);
+    setPageError("");
   }, [currentQuestion?.id]);
 
   const qType = currentQuestion?.type || "OPEN";
-  const options = Array.isArray(currentQuestion?.options)
-    ? currentQuestion.options
-    : [];
-
+  const options = Array.isArray(currentQuestion?.options) ? currentQuestion.options : [];
   const questionIndex = lastFeedback?.questionIndex ?? 0;
-  const totalQuestions =
-    lastFeedback?.totalQuestions ?? TOTAL_QUESTIONS_FALLBACK;
+  const totalQuestions = lastFeedback?.totalQuestions ?? TOTAL_FALLBACK;
+  const progressValue = useMemo(() =>
+    totalQuestions ? Math.min(100, (questionIndex / totalQuestions) * 100) : 0,
+    [questionIndex, totalQuestions]);
 
-  const progressValue = useMemo(() => {
-    if (!totalQuestions) return 0;
-    return Math.min(100, (questionIndex / totalQuestions) * 100);
-  }, [questionIndex, totalQuestions]);
-
-  const handleSubmitAnswer = async (skip = false) => {
+  const handleSubmit = async (skip = false) => {
     if (!sessionId) return;
+    const payload = qType === "MCQ"
+      ? { answerText: selectedOptionIndex === null ? "" : String(selectedOptionIndex) }
+      : { answerText: skip ? "" : answerText.trim() };
 
-    const payload =
-      qType === "MCQ"
-        ? {
-            answerText:
-              selectedOptionIndex === null ? "" : String(selectedOptionIndex)
-          }
-        : {
-            answerText: skip ? "" : answerText.trim()
-          };
-
-    if (!skip && !payload.answerText) {
-      setPageError("Please enter an answer before submitting.");
+    if (!skip && qType !== "MCQ" && !payload.answerText) {
+      setPageError("Type an answer or hit Skip.");
       return;
     }
 
+    setLoading(true);
+    setPageError("");
     try {
-      setLoading(true);
-      setPageError("");
-
       const response = await submitAnswer(sessionId, payload);
-
       setLastFeedback(response);
-
-      if (
-        response?.status === "COMPLETED" ||
-        response?.status === "FAILED"
-      ) {
+      if (response?.status === "COMPLETED" || response?.status === "FAILED") {
         navigate(`/summary/${sessionId}`);
         return;
       }
-
       if (response?.question) {
         setCurrentQuestion(response.question);
       } else {
         navigate(`/summary/${sessionId}`);
       }
-    } catch (error) {
-      console.error("Failed to submit answer", error);
-      setPageError("Failed to submit answer.");
+    } catch {
+      setPageError("Failed to submit. Try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  if (!sessionId) {
-    return null;
-  }
+  if (!sessionId || !currentQuestion) return null;
 
-  if (!currentQuestion) {
-    return (
-      <Container maxWidth="md" sx={{ mt: 5, mb: 6 }}>
-        <Alert severity="warning" sx={{ mb: 2 }}>
-          No question was loaded for this session.
-        </Alert>
-
-        <Button variant="contained" onClick={() => navigate("/")}>
-          Back Home
-        </Button>
-      </Container>
-    );
-  }
+  const qNum = String(questionIndex + 1).padStart(2, "0");
+  const qTotal = String(totalQuestions).padStart(2, "0");
 
   return (
-    <Container maxWidth="md" sx={{ mt: 5, mb: 6 }}>
-      <Paper elevation={4} sx={{ p: 2.5, mb: 2.5, borderRadius: 4 }}>
-        <Typography variant="h5" fontWeight={900} sx={{ mb: 1 }}>
-          Interview Session
+    <Container maxWidth="md" sx={{ pt: 4, pb: 8 }}>
+
+      {/* Header bar */}
+      <Box sx={{
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        mb: 3, pb: 2, borderBottom: "1px solid #1e1e30"
+      }}>
+        <Typography variant="h5" sx={{ fontWeight: 900 }}>
+          Interview<Box component="span" sx={{ color: "primary.main" }}>IQ</Box>
+        </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Typography sx={{
+            fontFamily: "monospace", fontWeight: 700, fontSize: "1rem",
+            color: "primary.main", letterSpacing: "0.05em"
+          }}>
+            {qNum} / {qTotal}
+          </Typography>
+          <Button size="small" variant="text" sx={{ color: "text.secondary", fontSize: "0.75rem" }}
+            onClick={() => navigate(`/summary/${sessionId}`)}>
+            End →
+          </Button>
+        </Box>
+      </Box>
+
+      {/* Progress */}
+      <LinearProgress variant="determinate" value={progressValue}
+        sx={{ mb: 3, "& .MuiLinearProgress-bar": { background: "linear-gradient(90deg, #7c6fff, #22d3a0)" } }} />
+
+      {/* Question */}
+      <Box sx={{
+        backgroundColor: "#0f0f1a", border: "1px solid #1e1e30",
+        borderRadius: 3, p: 3, mb: 2,
+      }}>
+        <Box sx={{ display: "flex", gap: 1, mb: 2, flexWrap: "wrap" }}>
+          <Chip label={qType} size="small" variant="outlined"
+            sx={{ borderColor: "#2a2a40", color: "text.secondary", fontFamily: "monospace" }} />
+          {currentQuestion.difficulty && (
+            <Chip label={currentQuestion.difficulty} size="small" variant="outlined"
+              sx={{ borderColor: difficultyColor(currentQuestion.difficulty),
+                    color: difficultyColor(currentQuestion.difficulty) }} />
+          )}
+          {currentQuestion.tags && [...currentQuestion.tags].slice(0, 3).map(t => (
+            <Chip key={t} label={t} size="small" variant="outlined"
+              sx={{ borderColor: "#2a2a40", color: "text.secondary" }} />
+          ))}
+        </Box>
+
+        <Typography variant="h6" sx={{ lineHeight: 1.5, fontWeight: 700, color: "text.primary" }}>
+          {currentQuestion.text}
         </Typography>
 
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: 1,
-            flexWrap: "wrap",
-            gap: 1
-          }}
-        >
-          <Typography variant="body2" sx={{ opacity: 0.8 }}>
-            Question <b>{Math.min(questionIndex + 1, totalQuestions)}</b> /{" "}
-            {totalQuestions}
-          </Typography>
-
-          <Typography variant="body2" sx={{ opacity: 0.8 }}>
-            Session: <b>{sessionId}</b>
-          </Typography>
-        </Box>
-
-        <LinearProgress
-          variant="determinate"
-          value={progressValue}
-          sx={{ height: 10, borderRadius: 999 }}
-        />
-      </Paper>
-
-      <Paper elevation={6} sx={{ p: 3, mb: 2.5, borderRadius: 4 }}>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 2,
-            mb: 1,
-            flexWrap: "wrap"
-          }}
-        >
-          <Typography variant="h6" fontWeight={900}>
-            {currentQuestion.text}
-          </Typography>
-
-          <Chip label={qType} />
-        </Box>
-
-        {qType === "CODE" && currentQuestion?.starterCode && (
-          <Paper
-            variant="outlined"
-            sx={{
-              p: 2,
-              mt: 2,
-              borderRadius: 2,
-              backgroundColor: "rgba(0,0,0,0.02)"
-            }}
-          >
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>
-              Starter Code
+        {qType === "CODE" && currentQuestion.starterCode && (
+          <Box sx={{
+            mt: 2, p: 2, borderRadius: 2, backgroundColor: "#08080f",
+            border: "1px solid #2a2a40",
+          }}>
+            <Typography variant="caption" sx={{ color: "text.secondary", display: "block", mb: 1 }}>
+              Starter code
             </Typography>
-            <pre style={{ margin: 0, whiteSpace: "pre-wrap" }}>
+            <pre style={{ margin: 0, fontFamily: "monospace", fontSize: "0.85rem", color: "#a99fff", whiteSpace: "pre-wrap" }}>
               {currentQuestion.starterCode}
             </pre>
-          </Paper>
+          </Box>
         )}
-      </Paper>
+      </Box>
 
-      <Paper elevation={6} sx={{ p: 3, mb: 2.5, borderRadius: 4 }}>
-        <Typography variant="h6" fontWeight={900} sx={{ mb: 1 }}>
+      {/* Answer */}
+      <Box sx={{
+        backgroundColor: "#0f0f1a", border: "1px solid #1e1e30",
+        borderRadius: 3, p: 3, mb: 2,
+      }}>
+        <Typography variant="overline" sx={{ color: "text.secondary", letterSpacing: "0.1em" }}>
           Your answer
         </Typography>
 
         {qType === "MCQ" ? (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-            {options.length === 0 && (
-              <Typography color="error">
-                No options provided for this MCQ.
-              </Typography>
-            )}
-
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1, mt: 1.5 }}>
             {options.map((opt, idx) => (
               <Button
                 key={idx}
                 variant={selectedOptionIndex === idx ? "contained" : "outlined"}
                 onClick={() => setSelectedOptionIndex(idx)}
                 disabled={loading}
-                sx={{ justifyContent: "flex-start", textTransform: "none" }}
-              >
+                sx={{
+                  justifyContent: "flex-start", textAlign: "left",
+                  py: 1.25, px: 2,
+                  border: selectedOptionIndex === idx ? "none" : "1px solid #2a2a40",
+                  background: selectedOptionIndex === idx
+                    ? "linear-gradient(135deg, #7c6fff, #5a4fd4)"
+                    : "transparent",
+                }}>
+                <Box component="span" sx={{
+                  fontFamily: "monospace", mr: 1.5, opacity: 0.6, fontWeight: 700
+                }}>
+                  {String.fromCharCode(65 + idx)}.
+                </Box>
                 {opt}
               </Button>
             ))}
           </Box>
         ) : (
           <TextField
-            fullWidth
-            multiline
+            fullWidth multiline
             minRows={qType === "CODE" ? 7 : 4}
             value={answerText}
-            onChange={(e) => setAnswerText(e.target.value)}
-            placeholder={
-              qType === "CODE"
-                ? "Type your code / query here..."
-                : "Type your answer..."
-            }
+            onChange={e => setAnswerText(e.target.value)}
+            placeholder={qType === "CODE" ? "Write your code here..." : "Type your answer..."}
+            disabled={loading}
             sx={{
-              mt: 1,
-              "& textarea":
-                qType === "CODE" ? { fontFamily: "monospace" } : undefined
+              mt: 1.5,
+              "& textarea": qType === "CODE" ? {
+                fontFamily: "monospace", fontSize: "0.875rem", color: "#a99fff"
+              } : {},
             }}
           />
         )}
 
         {pageError && (
-          <Alert severity="error" sx={{ mt: 2 }}>
-            {pageError}
-          </Alert>
+          <Alert severity="error" sx={{ mt: 1.5 }}>{pageError}</Alert>
         )}
 
-        <Box sx={{ display: "flex", gap: 2, mt: 2, flexWrap: "wrap" }}>
+        <Box sx={{ display: "flex", gap: 1.5, mt: 2 }}>
           <Button
-            variant="contained"
-            onClick={() => handleSubmitAnswer(false)}
-            disabled={loading}
-          >
-            {loading ? <CircularProgress size={22} /> : "Submit"}
+            variant="contained" onClick={() => handleSubmit(false)} disabled={loading}
+            sx={{
+              px: 3, background: "linear-gradient(135deg, #7c6fff, #5a4fd4)",
+              "&:hover": { background: "linear-gradient(135deg, #9180ff, #6c5fe8)" },
+            }}>
+            {loading ? <CircularProgress size={20} color="inherit" /> : "Submit"}
           </Button>
-
-          <Button
-            variant="outlined"
-            onClick={() => handleSubmitAnswer(true)}
-            disabled={loading}
-          >
+          <Button variant="outlined" onClick={() => handleSubmit(true)} disabled={loading}
+            sx={{ color: "text.secondary", borderColor: "#2a2a40" }}>
             Skip
           </Button>
-
-          <Button
-            variant="text"
-            onClick={() => navigate(`/summary/${sessionId}`)}
-            disabled={loading}
-          >
-            End interview
-          </Button>
         </Box>
-      </Paper>
+      </Box>
 
+      {/* Feedback from last answer */}
       {lastFeedback && (
-        <Paper elevation={4} sx={{ p: 2.5, mb: 2.5, borderRadius: 4 }}>
-          <Typography variant="h6" fontWeight={900}>
-            Previous answer feedback
+        <Box sx={{
+          backgroundColor: "#0f0f1a", border: "1px solid #1e1e30",
+          borderRadius: 3, p: 3,
+        }}>
+          <Typography variant="overline" sx={{ color: "text.secondary", letterSpacing: "0.1em" }}>
+            Last answer feedback
           </Typography>
 
-          <Typography variant="body2" sx={{ opacity: 0.75, mt: 0.5 }}>
-            This feedback is for the last submitted answer.
-          </Typography>
-
-          <Divider sx={{ my: 1.5 }} />
-
-          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 1 }}>
-            <Chip label={`Status: ${lastFeedback.status}`} />
-            {typeof lastFeedback.scoreSoFar === "number" &&
-              typeof lastFeedback.maxScoreSoFar === "number" && (
-                <Chip
-                  label={`Score so far: ${lastFeedback.scoreSoFar}/${lastFeedback.maxScoreSoFar}`}
-                  variant="outlined"
-                />
-              )}
-            {lastFeedback.evaluationSource && (
+          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1.5, mb: 1.5 }}>
+            <Chip
+              label={lastFeedback.status}
+              size="small"
+              sx={{
+                fontWeight: 800,
+                background: lastFeedback.status === "IN_PROGRESS" ? "#1a1a2e" : "transparent",
+                color: lastFeedback.status?.includes("FAIL") ? "#ff4d6a" : "#22d3a0",
+                border: "1px solid",
+                borderColor: lastFeedback.status?.includes("FAIL") ? "#ff4d6a" : "#22d3a0",
+              }}
+            />
+            {typeof lastFeedback.scoreSoFar === "number" && (
               <Chip
-                label={`Source: ${lastFeedback.evaluationSource}`}
-                variant="outlined"
+                label={`Score ${lastFeedback.scoreSoFar}/${lastFeedback.maxScoreSoFar}`}
+                size="small" variant="outlined"
+                sx={{ borderColor: "#2a2a40", color: "text.secondary", fontFamily: "monospace" }}
               />
             )}
-            {lastFeedback.agentAction && (
+            {lastFeedback.evaluationSource && (
               <Chip
-                label={`Agent: ${lastFeedback.agentAction}`}
-                variant="outlined"
+                label={lastFeedback.evaluationSource === "AI" ? "🤖 AI" : "⚙ Keyword"}
+                size="small" variant="outlined"
+                sx={{ borderColor: lastFeedback.evaluationSource === "AI" ? "#7c6fff" : "#2a2a40",
+                      color: lastFeedback.evaluationSource === "AI" ? "#a99fff" : "text.secondary" }}
               />
             )}
           </Box>
 
           {lastFeedback.feedback && (
-            <Typography sx={{ mt: 1 }}>
-              <b>Feedback:</b> {lastFeedback.feedback}
+            <Typography variant="body2" sx={{ color: "text.secondary", mb: 1, lineHeight: 1.6 }}>
+              {lastFeedback.feedback}
             </Typography>
           )}
 
-          {lastFeedback.failReason && (
-            <Typography sx={{ mt: 1 }}>
-              <b>Reason:</b> {lastFeedback.failReason}
-            </Typography>
+          {Array.isArray(lastFeedback.strengths) && lastFeedback.strengths.length > 0 && (
+            <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap", mb: 1 }}>
+              {lastFeedback.strengths.map((s, i) => (
+                <Chip key={i} label={s} size="small"
+                  sx={{ backgroundColor: "rgba(34,211,160,0.1)", color: "#22d3a0", border: "1px solid rgba(34,211,160,0.2)" }} />
+              ))}
+            </Box>
           )}
 
-          {lastFeedback.agentReason && (
-            <Typography sx={{ mt: 1 }}>
-              <b>Agent reason:</b> {lastFeedback.agentReason}
-            </Typography>
+          {Array.isArray(lastFeedback.missingKeywords) && lastFeedback.missingKeywords.length > 0 && (
+            <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
+              {lastFeedback.missingKeywords.map((k, i) => (
+                <Chip key={i} label={k} size="small"
+                  sx={{ backgroundColor: "rgba(255,77,106,0.1)", color: "#ff4d6a", border: "1px solid rgba(255,77,106,0.2)" }} />
+              ))}
+            </Box>
           )}
-
-          {Array.isArray(lastFeedback.strengths) &&
-            lastFeedback.strengths.length > 0 && (
-              <Typography sx={{ mt: 1 }}>
-                <b>Strengths:</b> {lastFeedback.strengths.join(", ")}
-              </Typography>
-            )}
-
-          {Array.isArray(lastFeedback.missingKeywords) &&
-            lastFeedback.missingKeywords.length > 0 && (
-              <Typography sx={{ mt: 1 }}>
-                <b>Missing Keywords:</b>{" "}
-                {lastFeedback.missingKeywords.join(", ")}
-              </Typography>
-            )}
-
-          {lastFeedback.weakTags &&
-            Object.keys(lastFeedback.weakTags).length > 0 && (
-              <Typography sx={{ mt: 1 }}>
-                <b>Weak Tags:</b> {Object.keys(lastFeedback.weakTags).join(", ")}
-              </Typography>
-            )}
-        </Paper>
+        </Box>
       )}
     </Container>
   );

@@ -1,62 +1,22 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  Container,
-  Typography,
-  Button,
-  TextField,
-  Box,
-  Paper,
-  Divider,
-  Link,
-  Chip,
-  CircularProgress
+  Box, Button, Chip, CircularProgress, Container,
+  Divider, Link, TextField, Typography
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import {
-  getTopics,
-  startInterview,
-  startJobSpecificInterview
-} from "../api/interviewApi";
+import { getTopics, startInterview, startJobSpecificInterview } from "../api/interviewApi";
 import { extractTextFromImage } from "../api/ocrApi";
+import { getGuestId } from "../utils/guestId";
 
 function Header() {
-  const navigate = useNavigate();
-  const username = localStorage.getItem("username");
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userId");
-    localStorage.removeItem("username");
-    navigate("/");
-  };
-
   return (
-    <Box
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        mb: 4
-      }}
-    >
-      <Box>
-        <Typography variant="h4" fontWeight={900}>
-          InterviewIQ
-        </Typography>
-        <Typography variant="body2" sx={{ opacity: 0.8, mt: 0.5 }}>
-          10 questions • instant feedback • summary at the end
-        </Typography>
-      </Box>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-        {username ? (
-          <>
-            <Typography variant="body2" sx={{ opacity: 0.7 }}>{username}</Typography>
-            <Button size="small" variant="outlined" onClick={handleLogout}>Logout</Button>
-          </>
-        ) : (
-          <Button size="small" variant="outlined" onClick={() => navigate("/auth")}>Login</Button>
-        )}
-      </Box>
+    <Box sx={{ mb: 5 }}>
+      <Typography variant="h4" sx={{ fontWeight: 900, letterSpacing: "-0.03em", color: "#ededf5" }}>
+        Interview<Box component="span" sx={{ color: "primary.main" }}>IQ</Box>
+      </Typography>
+      <Typography variant="caption" sx={{ color: "text.secondary", letterSpacing: "0.06em", textTransform: "uppercase" }}>
+        AI Interview Simulator
+      </Typography>
     </Box>
   );
 }
@@ -78,306 +38,233 @@ export default function Home() {
   const [topicsLoading, setTopicsLoading] = useState(false);
   const [startLoading, setStartLoading] = useState(false);
   const [ocrLoading, setOcrLoading] = useState(false);
-
   const [pageError, setPageError] = useState("");
 
   useEffect(() => {
-    const loadTopics = async () => {
+    const load = async () => {
+      setTopicsLoading(true);
       try {
-        setTopicsLoading(true);
-        setPageError("");
-
         const data = await getTopics();
         setTopics(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error("Failed to fetch topics", error);
+      } catch {
         setTopics([]);
       } finally {
         setTopicsLoading(false);
       }
     };
-
-    loadTopics();
+    load();
   }, []);
 
-  const topTopics = useMemo(() => {
-    return Array.isArray(topics) ? topics.slice(0, 16) : [];
-  }, [topics]);
-
-  const handleJobImageChange = (event) => {
-    setJobImage(event.target.files?.[0] || null);
-  };
+  const topTopics = useMemo(() => topics.slice(0, 16), [topics]);
 
   const handleExtractTextFromImage = async () => {
-    if (!jobImage) {
-      alert("Please select an image first.");
-      return;
-    }
-
+    if (!jobImage) return;
+    setOcrLoading(true);
     try {
-      setOcrLoading(true);
-      setPageError("");
-
-      const extractedText = await extractTextFromImage(jobImage);
-
+      const text = await extractTextFromImage(jobImage);
+      setJobText(typeof text === "string" ? text : "");
       setShowText(true);
-      setJobText(typeof extractedText === "string" ? extractedText : "");
-    } catch (error) {
-      console.error("OCR failed", error);
-      alert("Failed to extract text from image.");
+    } catch {
+      setPageError("OCR failed. Please try again.");
     } finally {
       setOcrLoading(false);
     }
   };
 
-  const handleStartInterview = async () => {
+  const handleStart = async () => {
+    setStartLoading(true);
+    setPageError("");
     try {
-      setStartLoading(true);
-      setPageError("");
-
-      const trimmedText = jobText.trim();
-      const trimmedUrl = jobUrl.trim();
+      const url = jobUrl.trim();
+      const text = jobText.trim();
+      const userId = getGuestId();
 
       let response;
-
-      if (trimmedText) {
-        response = await startJobSpecificInterview({
-          sourceType: "TEXT",
-          payload: trimmedText,
-          topic: selectedTopic || null,
-          userId: null
-        });
-      } else if (trimmedUrl) {
-        response = await startJobSpecificInterview({
-          sourceType: "URL",
-          payload: trimmedUrl,
-          topic: selectedTopic || null,
-          userId: null
-        });
+      if (text) {
+        response = await startJobSpecificInterview({ sourceType: "TEXT", payload: text, topic: selectedTopic || null, userId });
+      } else if (url) {
+        response = await startJobSpecificInterview({ sourceType: "URL", payload: url, topic: selectedTopic || null, userId });
       } else {
-        response = await startInterview({
-          sourceType: null,
-          payload: "",
-          topic: selectedTopic || null,
-          userId: null
-        });
+        response = await startInterview({ sourceType: null, payload: "", topic: selectedTopic || null, userId });
       }
 
-      const sessionId = response?.sessionId;
-      const firstQuestion = response?.firstQuestion || null;
-
-      if (!sessionId) {
-        setPageError("Backend did not return a sessionId.");
-        return;
-      }
-
-      navigate(`/interview/${sessionId}`, {
-        state: {
-          sessionId,
-          firstQuestion
-        }
-      });
-    } catch (error) {
-      console.error("Failed to start interview", error);
-      setPageError("Failed to start session. Please try again.");
+      const { sessionId, firstQuestion } = response || {};
+      if (!sessionId) { setPageError("No session returned. Try again."); return; }
+      navigate(`/interview/${sessionId}`, { state: { sessionId, firstQuestion } });
+    } catch {
+      setPageError("Failed to start session. Check backend connection.");
     } finally {
       setStartLoading(false);
     }
   };
 
   return (
-    <Container maxWidth="md" sx={{ mt: 5, mb: 6 }}>
+    <Container maxWidth="lg" sx={{ pt: 6, pb: 8 }}>
       <Header />
 
-      <Paper elevation={6} sx={{ p: { xs: 3, sm: 4 }, borderRadius: 4 }}>
-        <Typography variant="h6" fontWeight={900}>
-          Start practicing in seconds
+      {/* Hero */}
+      <Box sx={{ mb: 5 }}>
+        <Typography variant="h3" sx={{ mb: 1, lineHeight: 1.1 }}>
+          Practice like it&apos;s{" "}
+          <Box component="span" sx={{
+            background: "linear-gradient(135deg, #7c6fff, #22d3a0)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          }}>
+            the real thing.
+          </Box>
         </Typography>
-
-        <Typography variant="body2" sx={{ opacity: 0.8, mt: 0.5, mb: 3 }}>
-          Paste a job link to tailor questions — or start instantly with a topic.
+        <Typography variant="body1" sx={{ color: "text.secondary" }}>
+          10 adaptive questions · AI evaluation · instant feedback
         </Typography>
+      </Box>
 
-        <TextField
-          fullWidth
-          label="Job URL (optional)"
-          placeholder="Paste a job posting link..."
-          value={jobUrl}
-          onChange={(e) => setJobUrl(e.target.value)}
-          sx={{ mb: 1.5 }}
-        />
+      {/* Two-column cards */}
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3, mb: 3 }}>
 
-        <Box sx={{ display: "flex", gap: 2, mb: 2, flexWrap: "wrap" }}>
-          <Button
-            variant="text"
-            onClick={() => setShowText((prev) => !prev)}
-            sx={{ textTransform: "none" }}
-          >
-            {showText ? "Hide pasted text" : "Prefer to paste text?"}
-          </Button>
+        {/* Job Input */}
+        <Box sx={{ backgroundColor: "#0f0f1a", border: "1px solid #1e1e30", borderRadius: 3, p: 3 }}>
+          <Typography variant="overline" sx={{ color: "text.secondary", letterSpacing: "0.1em" }}>
+            Tailor to a job (optional)
+          </Typography>
 
-          <Button
-            variant="text"
-            onClick={() => setShowOcr((prev) => !prev)}
-            sx={{ textTransform: "none" }}
-          >
-            {showOcr ? "Hide OCR" : "Have an image?"}
-          </Button>
-        </Box>
-
-        {showText && (
           <TextField
-            fullWidth
-            multiline
-            rows={5}
-            label="Job description text"
-            placeholder="Paste job description..."
-            value={jobText}
-            onChange={(e) => setJobText(e.target.value)}
-            sx={{ mb: 2 }}
+            fullWidth size="small"
+            placeholder="Paste a job URL..."
+            value={jobUrl}
+            onChange={e => setJobUrl(e.target.value)}
+            sx={{ mt: 1.5, mb: 1 }}
           />
-        )}
 
-        {showOcr && (
-          <Box
-            sx={{
-              display: "flex",
-              gap: 2,
-              mb: 2,
-              flexWrap: "wrap",
-              alignItems: "center"
-            }}
-          >
-            <Button variant="outlined" component="label">
-              Upload image
-              <input
-                type="file"
-                accept="image/*"
-                hidden
-                onChange={handleJobImageChange}
-              />
+          <Box sx={{ display: "flex", gap: 1.5 }}>
+            <Button size="small" variant="text" sx={{ color: "text.secondary", fontSize: "0.78rem" }}
+              onClick={() => setShowText(p => !p)}>
+              {showText ? "Hide text" : "Paste text instead"}
             </Button>
-
-            <Button
-              variant="text"
-              onClick={handleExtractTextFromImage}
-              disabled={!jobImage || ocrLoading}
-            >
-              {ocrLoading ? "Extracting..." : "OCR image"}
+            <Button size="small" variant="text" sx={{ color: "text.secondary", fontSize: "0.78rem" }}
+              onClick={() => setShowOcr(p => !p)}>
+              {showOcr ? "Hide OCR" : "Upload screenshot"}
             </Button>
-
-            {jobImage && (
-              <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                {jobImage.name}
-              </Typography>
-            )}
           </Box>
-        )}
 
-        <Divider sx={{ my: 2.5 }} />
+          {showText && (
+            <TextField
+              fullWidth multiline rows={4} size="small"
+              placeholder="Paste the job description..."
+              value={jobText}
+              onChange={e => setJobText(e.target.value)}
+              sx={{ mt: 1.5 }}
+            />
+          )}
 
-        <Typography fontWeight={900} sx={{ mb: 1 }}>
-          Quick topic (optional)
-        </Typography>
-
-        {topicsLoading ? (
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
-            <CircularProgress size={18} />
-            <Typography variant="body2">Loading topics...</Typography>
-          </Box>
-        ) : (
-          <>
-            <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 1.5 }}>
-              <Chip
-                label="General"
-                clickable
-                onClick={() => setSelectedTopic("")}
-                variant={selectedTopic === "" ? "filled" : "outlined"}
-              />
-
-              {topTopics.map((topic) => (
-                <Chip
-                  key={topic}
-                  label={topic}
-                  clickable
-                  onClick={() => setSelectedTopic(topic)}
-                  variant={selectedTopic === topic ? "filled" : "outlined"}
-                />
-              ))}
+          {showOcr && (
+            <Box sx={{ display: "flex", gap: 1.5, alignItems: "center", mt: 1.5, flexWrap: "wrap" }}>
+              <Button variant="outlined" size="small" component="label">
+                Choose image
+                <input type="file" accept="image/*" hidden onChange={e => setJobImage(e.target.files?.[0] || null)} />
+              </Button>
+              <Button variant="outlined" size="small" onClick={handleExtractTextFromImage}
+                disabled={!jobImage || ocrLoading}>
+                {ocrLoading ? "Extracting..." : "Extract text"}
+              </Button>
+              {jobImage && (
+                <Typography variant="caption" sx={{ color: "text.secondary" }}>{jobImage.name}</Typography>
+              )}
             </Box>
-
-            <Button
-              variant="text"
-              onClick={() => setShowAllTopics((prev) => !prev)}
-              sx={{ textTransform: "none", mb: 2 }}
-              disabled={topics.length === 0}
-            >
-              {showAllTopics ? "Hide topics" : `More topics (${topics.length})`}
-            </Button>
-
-            {showAllTopics && (
-              <Paper
-                variant="outlined"
-                sx={{
-                  p: 2,
-                  borderRadius: 3,
-                  maxHeight: 160,
-                  overflow: "auto",
-                  mb: 2
-                }}
-              >
-                <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                  {topics.map((topic) => (
-                    <Chip
-                      key={topic}
-                      label={topic}
-                      clickable
-                      onClick={() => setSelectedTopic(topic)}
-                      variant={selectedTopic === topic ? "filled" : "outlined"}
-                    />
-                  ))}
-                </Box>
-              </Paper>
-            )}
-          </>
-        )}
-
-        {pageError && (
-          <Typography color="error" variant="body2" sx={{ mb: 2 }}>
-            {pageError}
-          </Typography>
-        )}
-
-        <Box textAlign="center" sx={{ mt: 2 }}>
-          <Button
-            variant="contained"
-            size="large"
-            onClick={handleStartInterview}
-            disabled={startLoading}
-            sx={{ px: 4.5, py: 1.25, fontWeight: 900, borderRadius: 3 }}
-          >
-            {startLoading ? "Starting..." : "Start session"}
-          </Button>
-
-          <Typography
-            variant="caption"
-            sx={{ display: "block", mt: 1.2, opacity: 0.75 }}
-          >
-            Leave everything empty for a general interview flow.
-          </Typography>
+          )}
         </Box>
-      </Paper>
 
-      <Box textAlign="center" mt={5}>
-        <Typography variant="body2" sx={{ opacity: 0.8 }}>
+        {/* Topic Picker */}
+        <Box sx={{ backgroundColor: "#0f0f1a", border: "1px solid #1e1e30", borderRadius: 3, p: 3 }}>
+          <Typography variant="overline" sx={{ color: "text.secondary", letterSpacing: "0.1em" }}>
+            Topic (optional)
+          </Typography>
+
+          {topicsLoading ? (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 1.5 }}>
+              <CircularProgress size={14} />
+              <Typography variant="caption" sx={{ color: "text.secondary" }}>Loading topics...</Typography>
+            </Box>
+          ) : (
+            <>
+              <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap", mt: 1.5 }}>
+                <Chip
+                  label="General" size="small" clickable
+                  onClick={() => setSelectedTopic("")}
+                  color={selectedTopic === "" ? "primary" : "default"}
+                  variant={selectedTopic === "" ? "filled" : "outlined"}
+                />
+                {topTopics.map(t => (
+                  <Chip
+                    key={t} label={t} size="small" clickable
+                    onClick={() => setSelectedTopic(t)}
+                    color={selectedTopic === t ? "primary" : "default"}
+                    variant={selectedTopic === t ? "filled" : "outlined"}
+                  />
+                ))}
+              </Box>
+
+              {topics.length > 16 && (
+                <>
+                  <Button
+                    size="small" variant="text"
+                    sx={{ mt: 1, color: "text.secondary", fontSize: "0.78rem" }}
+                    onClick={() => setShowAllTopics(p => !p)}>
+                    {showAllTopics ? "Show less" : `+ ${topics.length - 16} more topics`}
+                  </Button>
+                  {showAllTopics && (
+                    <Box sx={{
+                      display: "flex", gap: 0.75, flexWrap: "wrap", mt: 1,
+                      maxHeight: 140, overflowY: "auto", p: 1,
+                      border: "1px solid #1e1e30", borderRadius: 2,
+                    }}>
+                      {topics.slice(16).map(t => (
+                        <Chip
+                          key={t} label={t} size="small" clickable
+                          onClick={() => setSelectedTopic(t)}
+                          color={selectedTopic === t ? "primary" : "default"}
+                          variant={selectedTopic === t ? "filled" : "outlined"}
+                        />
+                      ))}
+                    </Box>
+                  )}
+                </>
+              )}
+            </>
+          )}
+        </Box>
+
+      </Box>
+
+      {pageError && (
+        <Typography variant="body2" sx={{ color: "error.main", mb: 2 }}>{pageError}</Typography>
+      )}
+
+      <Button
+        fullWidth variant="contained" size="large"
+        onClick={handleStart} disabled={startLoading}
+        sx={{
+          py: 1.5, fontSize: "1rem", fontWeight: 800,
+          background: "linear-gradient(135deg, #7c6fff 0%, #5a4fd4 100%)",
+          "&:hover": { background: "linear-gradient(135deg, #9180ff 0%, #6c5fe8 100%)" },
+        }}>
+        {startLoading ? <CircularProgress size={22} color="inherit" /> : "Start session →"}
+      </Button>
+
+      <Divider sx={{ my: 4 }} />
+
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Typography variant="caption" sx={{ color: "text.secondary" }}>
           Built by{" "}
-          <Link
-            href="https://www.linkedin.com/in/tom-giron-733921198/"
-            target="_blank"
-          >
+          <Link href="https://www.linkedin.com/in/tom-giron-733921198/" target="_blank"
+            sx={{ color: "primary.main", textDecoration: "none", fontWeight: 700 }}>
             Tom Giron
           </Link>
         </Typography>
+        <Button size="small" variant="text" sx={{ color: "text.secondary", fontSize: "0.75rem" }}
+          onClick={() => navigate("/history")}>
+          View history
+        </Button>
       </Box>
     </Container>
   );
