@@ -5,6 +5,7 @@ import com.cvoptimizer.cv_backend.entity.JobDescription;
 import com.cvoptimizer.cv_backend.model.ScraperResult;
 import com.cvoptimizer.cv_backend.repository.JobDescriptionRepository;
 import com.cvoptimizer.cv_backend.scraper.JobScraperRouter;
+import com.cvoptimizer.cv_backend.scraper.SsrfGuard;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +26,7 @@ public class JobScraperController {
 
     @GetMapping
     public ScraperResult scrapeJob(@RequestParam("url") String url) {
+        SsrfGuard.assertSafe(url);
         return jobScraperRouter.scrape(url);
     }
 
