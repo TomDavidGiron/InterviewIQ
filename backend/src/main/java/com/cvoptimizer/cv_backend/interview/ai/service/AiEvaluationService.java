@@ -31,12 +31,13 @@ public class AiEvaluationService {
     public AiEvaluationService(
             AiEvaluationProperties properties,
             AiEvaluationPromptTemplate promptTemplate,
-            ObjectMapper objectMapper
+            ObjectMapper objectMapper,
+            RestTemplate restTemplate
     ) {
         this.properties = properties;
         this.promptTemplate = promptTemplate;
         this.objectMapper = objectMapper;
-        this.restTemplate = new RestTemplate();
+        this.restTemplate = restTemplate;
     }
 
     public Optional<AiEvaluationResponse> evaluate(AiEvaluationRequest request) {

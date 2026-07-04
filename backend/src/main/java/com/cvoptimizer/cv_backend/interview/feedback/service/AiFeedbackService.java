@@ -30,10 +30,10 @@ public class AiFeedbackService {
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate;
 
-    public AiFeedbackService(AiEvaluationProperties properties, ObjectMapper objectMapper) {
+    public AiFeedbackService(AiEvaluationProperties properties, ObjectMapper objectMapper, RestTemplate restTemplate) {
         this.properties = properties;
         this.objectMapper = objectMapper;
-        this.restTemplate = new RestTemplate();
+        this.restTemplate = restTemplate;
     }
 
     public AiFeedbackResponse generateFeedback(AiFeedbackRequest request) {

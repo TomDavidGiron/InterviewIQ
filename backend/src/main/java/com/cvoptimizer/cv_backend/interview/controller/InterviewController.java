@@ -6,7 +6,6 @@ import com.cvoptimizer.cv_backend.interview.service.InterviewHistoryService;
 import com.cvoptimizer.cv_backend.interview.skillgraph.dto.SkillGraphResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import com.cvoptimizer.cv_backend.interview.service.SkillGraphService;
 
@@ -43,16 +42,12 @@ public class InterviewController {
     }
 
     @PostMapping("/start")
-    public ResponseEntity<InterviewStartResponse> start(@Valid @RequestBody InterviewStartRequest request,
-                                                        Authentication authentication) {
-        request.setUserId(authentication != null ? authentication.getName() : "anonymous");
+    public ResponseEntity<InterviewStartResponse> start(@Valid @RequestBody InterviewStartRequest request) {
         return ResponseEntity.ok(engine.start(request));
     }
 
     @PostMapping("/job-specific")
-    public ResponseEntity<InterviewStartResponse> startJobSpecific(@Valid @RequestBody InterviewStartRequest request,
-                                                                   Authentication authentication) {
-        request.setUserId(authentication != null ? authentication.getName() : "anonymous");
+    public ResponseEntity<InterviewStartResponse> startJobSpecific(@Valid @RequestBody InterviewStartRequest request) {
         return ResponseEntity.ok(engine.startJobSpecificInterview(request));
     }
 
@@ -73,9 +68,8 @@ public class InterviewController {
     public ResponseEntity<List<InterviewHistoryItemDto>> history(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            Authentication authentication
+            @RequestParam(required = false) String userId
     ) {
-        String userId = authentication != null ? authentication.getName() : null;
         return ResponseEntity.ok(history.getHistory(userId, page, size));
     }
 

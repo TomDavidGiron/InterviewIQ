@@ -28,9 +28,9 @@ export async function getSummary(sessionId) {
   return response.data;
 }
 
-export async function getHistory(page = 0, size = 20) {
+export async function getHistory(page = 0, size = 20, userId) {
   const response = await apiClient.get("/api/interview/history", {
-    params: { page, size }
+    params: { page, size, userId }
   });
   return response.data;
 }
