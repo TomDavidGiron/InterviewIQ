@@ -7,15 +7,18 @@ import com.cvoptimizer.cv_backend.interview.dto.InterviewStartResponse;
 import com.cvoptimizer.cv_backend.interview.dto.InterviewSummaryResponse;
 import com.cvoptimizer.cv_backend.interview.model.InterviewStatus;
 import com.cvoptimizer.cv_backend.interview.persistence.repo.InterviewSessionRepository;
+import com.cvoptimizer.cv_backend.TestcontainersConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@Import(TestcontainersConfiguration.class)
 class InterviewFlowIntegrationTest {
 
     @Autowired
