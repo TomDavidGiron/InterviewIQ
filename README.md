@@ -1,5 +1,7 @@
 # InterviewIQ — AI Interview Coach
 
+![CI](https://github.com/TomDavidGiron/InterviewIQ/actions/workflows/ci.yml/badge.svg)
+
 A backend-focused AI-powered technical interview simulator. Generates adaptive interview questions, evaluates answers using OpenAI, tracks weak skills over time, and produces personalised study plans.
 
 Built as a portfolio project to demonstrate backend engineering, AI system architecture, and full-stack integration.
