@@ -110,18 +110,18 @@ export default function SummaryPage() {
       {/* Score chips */}
       <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", justifyContent: "center", mb: 4 }}>
         <Chip label={`${summary.totalScore} / ${summary.maxScore} pts`}
-          sx={{ fontFamily: "monospace", fontWeight: 700, border: "1px solid #2a2a40", color: "text.secondary" }} />
+          sx={{ fontFamily: "monospace", fontWeight: 700, border: "1px solid #333", color: "text.secondary" }} />
         {summary.feedbackSource && (
           <Chip
             label={summary.feedbackSource === "ai" ? "🤖 AI Feedback" : "⚙ Rule-based"}
-            sx={{ fontWeight: 700, border: "1px solid #2a2a40", color: "text.secondary" }} />
+            sx={{ fontWeight: 700, border: "1px solid #333", color: "text.secondary" }} />
         )}
       </Box>
 
       {/* AI Summary */}
       {summary.feedbackSummary && (
         <Box sx={{
-          backgroundColor: "#0f0f1a", border: "1px solid #1e1e30",
+          backgroundColor: "#141414", border: "1px solid #262626",
           borderRadius: 3, p: 3, mb: 3,
         }}>
           <Typography variant="overline" sx={{ color: "primary.main", letterSpacing: "0.1em" }}>
@@ -136,7 +136,7 @@ export default function SummaryPage() {
       {/* Study Plan */}
       {summary.studyPlan && (
         <Box sx={{
-          backgroundColor: "#0f0f1a", border: "1px solid #1e1e30",
+          backgroundColor: "#141414", border: "1px solid #262626",
           borderRadius: 3, p: 3, mb: 3,
         }}>
           <Typography variant="overline" sx={{ color: "text.secondary", letterSpacing: "0.1em" }}>
@@ -198,7 +198,7 @@ export default function SummaryPage() {
       {/* Diagnosis details */}
       {summary.diagnosis && (
         <Box sx={{
-          backgroundColor: "#0f0f1a", border: "1px solid #1e1e30",
+          backgroundColor: "#141414", border: "1px solid #262626",
           borderRadius: 3, p: 3, mb: 3,
         }}>
           <Typography variant="overline" sx={{ color: "text.secondary", letterSpacing: "0.1em" }}>
@@ -225,7 +225,7 @@ export default function SummaryPage() {
       {/* Skill Graph */}
       {skillGraph?.skills?.length > 0 && (
         <Box sx={{
-          backgroundColor: "#0f0f1a", border: "1px solid #1e1e30",
+          backgroundColor: "#141414", border: "1px solid #262626",
           borderRadius: 3, p: 3, mb: 3,
         }}>
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1.5 }}>
@@ -251,7 +251,7 @@ export default function SummaryPage() {
       {/* Job fit */}
       {(summary.matchedJobSkills?.length > 0 || summary.missingJobSkills?.length > 0) && (
         <Box sx={{
-          backgroundColor: "#0f0f1a", border: "1px solid #1e1e30",
+          backgroundColor: "#141414", border: "1px solid #262626",
           borderRadius: 3, p: 3, mb: 3,
         }}>
           <Typography variant="overline" sx={{ color: "text.secondary", letterSpacing: "0.1em" }}>
@@ -279,16 +279,16 @@ export default function SummaryPage() {
       {/* Actions */}
       <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", mt: 2 }}>
         <Button variant="contained" onClick={() => navigate("/")}
-          sx={{ background: "linear-gradient(135deg, #7c6fff, #5a4fd4)" }}>
+          sx={{ background: "#3b82f6" }}>
           New session
         </Button>
         <Button variant="outlined" onClick={() => navigate("/history")}
-          sx={{ borderColor: "#2a2a40", color: "text.secondary" }}>
+          sx={{ borderColor: "#333", color: "text.secondary" }}>
           History
         </Button>
         {(skillGraph || resetDone) && (
           <Button variant="outlined" color="error" onClick={handleReset} disabled={resetDone}
-            sx={{ borderColor: resetDone ? "#2a2a40" : "#ff4d6a33", color: resetDone ? "text.secondary" : "#ff4d6a" }}>
+            sx={{ borderColor: resetDone ? "#333" : "#ff4d6a33", color: resetDone ? "text.secondary" : "#ff4d6a" }}>
             {resetDone ? "Graph reset" : "Reset skill graph"}
           </Button>
         )}

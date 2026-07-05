@@ -4,48 +4,48 @@ const theme = createTheme({
   palette: {
     mode: "dark",
     background: {
-      default: "#08080f",
-      paper: "#0f0f1a",
+      default: "#0d0d0d",
+      paper: "#141414",
     },
     primary: {
-      main: "#7c6fff",
-      light: "#a99fff",
-      dark: "#5a4fd4",
+      main: "#60a5fa",
+      light: "#93c5fd",
+      dark: "#3b82f6",
       contrastText: "#fff",
     },
     secondary: {
       main: "#22d3a0",
     },
     error: {
-      main: "#ff4d6a",
+      main: "#f87171",
     },
     warning: {
-      main: "#f59e0b",
+      main: "#fbbf24",
     },
     success: {
       main: "#22d3a0",
     },
     text: {
-      primary: "#ededf5",
-      secondary: "#7a7a9e",
+      primary: "#e2e8f0",
+      secondary: "#6b7280",
     },
-    divider: "#1e1e30",
+    divider: "#262626",
   },
   typography: {
     fontFamily: "'Inter', 'Segoe UI', 'Arial', sans-serif",
-    h3: { fontWeight: 900, letterSpacing: "-0.03em" },
-    h4: { fontWeight: 900, letterSpacing: "-0.02em" },
-    h5: { fontWeight: 800, letterSpacing: "-0.01em" },
-    h6: { fontWeight: 800 },
-    subtitle1: { color: "#7a7a9e" },
+    h3: { fontWeight: 800, letterSpacing: "-0.02em" },
+    h4: { fontWeight: 800, letterSpacing: "-0.02em" },
+    h5: { fontWeight: 700, letterSpacing: "-0.01em" },
+    h6: { fontWeight: 700 },
+    subtitle1: { color: "#6b7280" },
   },
-  shape: { borderRadius: 10 },
+  shape: { borderRadius: 4 },
   components: {
     MuiPaper: {
       styleOverrides: {
         root: {
           backgroundImage: "none",
-          border: "1px solid #1e1e30",
+          border: "1px solid #262626",
         },
       },
     },
@@ -53,26 +53,27 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           textTransform: "none",
-          fontWeight: 700,
-          borderRadius: 8,
+          fontWeight: 600,
+          borderRadius: 4,
           letterSpacing: "0.01em",
+          boxShadow: "none",
+          "&:hover": { boxShadow: "none" },
         },
         contained: {
-          boxShadow: "none",
-          "&:hover": { boxShadow: "0 0 0 3px rgba(124,111,255,0.2)" },
+          "&:hover": { filter: "brightness(1.12)" },
         },
         outlined: {
-          borderColor: "#2a2a40",
-          "&:hover": { borderColor: "#7c6fff", backgroundColor: "rgba(124,111,255,0.06)" },
+          borderColor: "#333",
+          "&:hover": { borderColor: "#60a5fa", backgroundColor: "rgba(96,165,250,0.06)" },
         },
       },
     },
     MuiChip: {
       styleOverrides: {
         root: {
-          fontWeight: 700,
+          fontWeight: 600,
           fontSize: "0.72rem",
-          borderRadius: 6,
+          borderRadius: 3,
         },
       },
     },
@@ -80,10 +81,11 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           "& .MuiOutlinedInput-root": {
-            backgroundColor: "#0b0b16",
-            "& fieldset": { borderColor: "#1e1e30" },
-            "&:hover fieldset": { borderColor: "#3a3a55" },
-            "&.Mui-focused fieldset": { borderColor: "#7c6fff" },
+            backgroundColor: "#111",
+            borderRadius: 4,
+            "& fieldset": { borderColor: "#2a2a2a" },
+            "&:hover fieldset": { borderColor: "#3f3f3f" },
+            "&.Mui-focused fieldset": { borderColor: "#60a5fa" },
           },
         },
       },
@@ -91,22 +93,22 @@ const theme = createTheme({
     MuiLinearProgress: {
       styleOverrides: {
         root: {
-          borderRadius: 999,
-          backgroundColor: "#1e1e30",
-          height: 6,
+          borderRadius: 2,
+          backgroundColor: "#1f1f1f",
+          height: 5,
         },
-        bar: { borderRadius: 999 },
+        bar: { borderRadius: 2 },
       },
     },
     MuiDivider: {
       styleOverrides: {
-        root: { borderColor: "#1e1e30" },
+        root: { borderColor: "#262626" },
       },
     },
     MuiAlert: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
+          borderRadius: 4,
           border: "1px solid",
         },
       },

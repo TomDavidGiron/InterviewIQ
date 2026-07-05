@@ -16,7 +16,7 @@ export default class ErrorBoundary extends React.Component {
     return (
       <div style={{
         minHeight: "100vh",
-        background: "#08080f",
+        background: "#0d0d0d",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -39,7 +39,7 @@ export default class ErrorBoundary extends React.Component {
           {this.state.message}
         </div>
         <a href="/" style={{
-          background: "linear-gradient(135deg, #7c6fff, #5a4fd4)",
+          background: "#3b82f6",
           color: "#fff", textDecoration: "none",
           padding: "0.6rem 1.5rem", borderRadius: "8px",
           fontWeight: 700, fontSize: "0.9rem",

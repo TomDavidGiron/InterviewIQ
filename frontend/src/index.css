@@ -2,8 +2,8 @@
 
 body {
   font-family: 'Inter', 'Segoe UI', 'Arial', sans-serif;
-  background: #08080f;
-  color: #ededf5;
+  background: #0d0d0d;
+  color: #e5e7eb;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -15,5 +15,5 @@ code, pre {
 }
 
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #0f0f1a; }
-::-webkit-scrollbar-thumb { background: #2a2a40; border-radius: 999px; }
+::-webkit-scrollbar-track { background: #141414; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 999px; }

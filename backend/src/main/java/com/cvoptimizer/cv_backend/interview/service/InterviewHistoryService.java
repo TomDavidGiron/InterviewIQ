@@ -90,12 +90,13 @@ public class InterviewHistoryService {
     public List<InterviewHistoryItemDto> getHistory(String userId, int page, int size) {
         PageRequest pr = PageRequest.of(
                 Math.max(0, page),
-                Math.max(1, size),
+                Math.min(100, Math.max(1, size)),
                 Sort.by(Sort.Direction.DESC, "createdAt")
         );
-        Page<InterviewSessionEntity> p = (userId != null && !userId.isBlank())
-                ? sessionRepo.findByUserId(userId, pr)
-                : sessionRepo.findAll(pr);
+        if (userId == null || userId.isBlank()) {
+            return new ArrayList<>();
+        }
+        Page<InterviewSessionEntity> p = sessionRepo.findByUserId(userId, pr);
 
         List<InterviewHistoryItemDto> out = new ArrayList<>();
         for (InterviewSessionEntity s : p.getContent()) {

@@ -21,7 +21,7 @@ export default function NotFoundPage() {
       </Typography>
       <Button
         variant="contained"
-        sx={{ background: "linear-gradient(135deg, #7c6fff, #5a4fd4)" }}
+        sx={{ background: "#3b82f6" }}
         onClick={() => navigate("/")}
       >
         ← Go Home

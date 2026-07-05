@@ -11,7 +11,7 @@ import { getGuestId } from "../utils/guestId";
 function Header() {
   return (
     <Box sx={{ mb: 5 }}>
-      <Typography variant="h4" sx={{ fontWeight: 900, letterSpacing: "-0.03em", color: "#ededf5" }}>
+      <Typography variant="h4" sx={{ fontWeight: 900, letterSpacing: "-0.03em", color: "#e5e7eb" }}>
         Interview<Box component="span" sx={{ color: "primary.main" }}>IQ</Box>
       </Typography>
       <Typography variant="caption" sx={{ color: "text.secondary", letterSpacing: "0.06em", textTransform: "uppercase" }}>
@@ -106,11 +106,7 @@ export default function Home() {
       <Box sx={{ mb: 5 }}>
         <Typography variant="h3" sx={{ mb: 1, lineHeight: 1.1 }}>
           Practice like it&apos;s{" "}
-          <Box component="span" sx={{
-            background: "linear-gradient(135deg, #7c6fff, #22d3a0)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-          }}>
+          <Box component="span" sx={{ color: "#60a5fa" }}>
             the real thing.
           </Box>
         </Typography>
@@ -123,7 +119,7 @@ export default function Home() {
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3, mb: 3 }}>
 
         {/* Job Input */}
-        <Box sx={{ backgroundColor: "#0f0f1a", border: "1px solid #1e1e30", borderRadius: 3, p: 3 }}>
+        <Box sx={{ backgroundColor: "#141414", border: "1px solid #262626", borderRadius: 3, p: 3 }}>
           <Typography variant="overline" sx={{ color: "text.secondary", letterSpacing: "0.1em" }}>
             Tailor to a job (optional)
           </Typography>
@@ -175,7 +171,7 @@ export default function Home() {
         </Box>
 
         {/* Topic Picker */}
-        <Box sx={{ backgroundColor: "#0f0f1a", border: "1px solid #1e1e30", borderRadius: 3, p: 3 }}>
+        <Box sx={{ backgroundColor: "#141414", border: "1px solid #262626", borderRadius: 3, p: 3 }}>
           <Typography variant="overline" sx={{ color: "text.secondary", letterSpacing: "0.1em" }}>
             Topic (optional)
           </Typography>
@@ -216,7 +212,7 @@ export default function Home() {
                     <Box sx={{
                       display: "flex", gap: 0.75, flexWrap: "wrap", mt: 1,
                       maxHeight: 140, overflowY: "auto", p: 1,
-                      border: "1px solid #1e1e30", borderRadius: 2,
+                      border: "1px solid #262626", borderRadius: 2,
                     }}>
                       {topics.slice(16).map(t => (
                         <Chip
@@ -245,8 +241,8 @@ export default function Home() {
         onClick={handleStart} disabled={startLoading}
         sx={{
           py: 1.5, fontSize: "1rem", fontWeight: 800,
-          background: "linear-gradient(135deg, #7c6fff 0%, #5a4fd4 100%)",
-          "&:hover": { background: "linear-gradient(135deg, #9180ff 0%, #6c5fe8 100%)" },
+          background: "#3b82f6",
+          "&:hover": { background: "#4f9cff" },
         }}>
         {startLoading ? <CircularProgress size={22} color="inherit" /> : "Start session →"}
       </Button>

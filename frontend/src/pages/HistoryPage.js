@@ -63,11 +63,11 @@ export default function HistoryPage() {
       ) : items.length === 0 ? (
         <Box sx={{
           textAlign: "center", py: 8,
-          color: "text.secondary", border: "1px dashed #1e1e30", borderRadius: 3,
+          color: "text.secondary", border: "1px dashed #262626", borderRadius: 3,
         }}>
           <Typography variant="h6" sx={{ mb: 1, fontWeight: 700 }}>No sessions yet</Typography>
           <Typography variant="body2">Complete your first interview to see history here.</Typography>
-          <Button variant="contained" sx={{ mt: 3, background: "linear-gradient(135deg, #7c6fff, #5a4fd4)" }}
+          <Button variant="contained" sx={{ mt: 3, background: "#3b82f6" }}
             onClick={() => navigate("/")}>
             Start now
           </Button>
@@ -82,9 +82,9 @@ export default function HistoryPage() {
 
             return (
               <Box key={item.sessionId} sx={{
-                backgroundColor: "#0f0f1a", border: "1px solid #1e1e30",
+                backgroundColor: "#141414", border: "1px solid #262626",
                 borderRadius: 3, p: 3,
-                "&:hover": { borderColor: "#2a2a40" },
+                "&:hover": { borderColor: "#333" },
               }}>
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 1.5 }}>
                   <Typography variant="subtitle1" sx={{ fontWeight: 800, color: "text.primary" }}>
@@ -104,25 +104,25 @@ export default function HistoryPage() {
                       fontWeight: 700,
                       color: item.status === "PASSED" ? "#22d3a0" : item.status === "FAILED" ? "#ff4d6a" : "text.secondary",
                       border: "1px solid",
-                      borderColor: item.status === "PASSED" ? "rgba(34,211,160,0.3)" : item.status === "FAILED" ? "rgba(255,77,106,0.3)" : "#2a2a40",
+                      borderColor: item.status === "PASSED" ? "rgba(34,211,160,0.3)" : item.status === "FAILED" ? "rgba(255,77,106,0.3)" : "#333",
                       backgroundColor: item.status === "PASSED" ? "rgba(34,211,160,0.08)" : item.status === "FAILED" ? "rgba(255,77,106,0.08)" : "transparent",
                     }} />
                   <Chip label={`${item.score} / ${item.totalPossibleScore} pts`} size="small"
-                    sx={{ fontFamily: "monospace", border: "1px solid #2a2a40", color: "text.secondary" }} />
+                    sx={{ fontFamily: "monospace", border: "1px solid #333", color: "text.secondary" }} />
                   {item.levelHint && (
                     <Chip label={item.levelHint} size="small"
-                      sx={{ border: "1px solid #2a2a40", color: "text.secondary" }} />
+                      sx={{ border: "1px solid #333", color: "text.secondary" }} />
                   )}
                 </Box>
 
                 <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap", mb: 1.5 }}>
                   <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                    <Box component="span" sx={{ color: "#3d3d5a", mr: 0.5 }}>started</Box>
+                    <Box component="span" sx={{ color: "#4b5563", mr: 0.5 }}>started</Box>
                     {formatDate(item.createdAt)}
                   </Typography>
                   {item.endedAt && (
                     <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                      <Box component="span" sx={{ color: "#3d3d5a", mr: 0.5 }}>ended</Box>
+                      <Box component="span" sx={{ color: "#4b5563", mr: 0.5 }}>ended</Box>
                       {formatDate(item.endedAt)}
                     </Typography>
                   )}
@@ -136,12 +136,12 @@ export default function HistoryPage() {
 
                 <Box sx={{ display: "flex", gap: 1 }}>
                   <Button size="small" variant="contained"
-                    sx={{ background: "linear-gradient(135deg, #7c6fff, #5a4fd4)", fontSize: "0.78rem" }}
+                    sx={{ background: "#3b82f6", fontSize: "0.78rem" }}
                     onClick={() => navigate(`/summary/${item.sessionId}`)}>
                     Summary
                   </Button>
                   <Button size="small" variant="outlined"
-                    sx={{ borderColor: "#2a2a40", color: "text.secondary", fontSize: "0.78rem" }}
+                    sx={{ borderColor: "#333", color: "text.secondary", fontSize: "0.78rem" }}
                     onClick={() => navigate(`/history/${item.sessionId}`)}>
                     Details
                   </Button>

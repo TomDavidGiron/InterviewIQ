@@ -45,10 +45,25 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     }
 
     private String resolveIp(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
+        // Only trust X-Forwarded-For when the immediate connection comes from a private/loopback address,
+        // meaning the request is arriving through a trusted reverse proxy (Railway, Render, nginx).
+        String remoteAddr = request.getRemoteAddr();
+        if (isPrivateOrLoopback(remoteAddr)) {
+            String forwarded = request.getHeader("X-Forwarded-For");
+            if (forwarded != null && !forwarded.isBlank()) {
+                return forwarded.split(",")[0].trim();
+            }
         }
-        return request.getRemoteAddr();
+        return remoteAddr;
+    }
+
+    private boolean isPrivateOrLoopback(String addr) {
+        if (addr == null) return false;
+        try {
+            java.net.InetAddress ia = java.net.InetAddress.getByName(addr);
+            return ia.isLoopbackAddress() || ia.isSiteLocalAddress() || ia.isLinkLocalAddress();
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

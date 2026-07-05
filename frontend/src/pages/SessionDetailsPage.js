@@ -65,7 +65,7 @@ export default function SessionDetailsPage() {
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {attempts.map((attempt, idx) => (
             <Box key={attempt.attemptId} sx={{
-              backgroundColor: "#0f0f1a", border: "1px solid #1e1e30",
+              backgroundColor: "#141414", border: "1px solid #262626",
               borderRadius: 3, p: 3,
             }}>
               {/* Question header */}
@@ -88,7 +88,7 @@ export default function SessionDetailsPage() {
                   <Chip
                     label={`${attempt.earnedPoints} / ${attempt.maxPoints} pts`}
                     size="small"
-                    sx={{ fontFamily: "monospace", border: "1px solid #2a2a40", color: "text.secondary" }}
+                    sx={{ fontFamily: "monospace", border: "1px solid #333", color: "text.secondary" }}
                   />
                 </Box>
                 <Typography variant="caption" sx={{ color: "text.secondary" }}>
@@ -100,7 +100,7 @@ export default function SessionDetailsPage() {
                 {attempt.questionText}
               </Typography>
 
-              <Divider sx={{ my: 1.5, borderColor: "#1e1e30" }} />
+              <Divider sx={{ my: 1.5, borderColor: "#262626" }} />
 
               {/* Answer */}
               <Typography variant="overline" sx={{ color: "text.secondary", letterSpacing: "0.08em" }}>
@@ -108,7 +108,7 @@ export default function SessionDetailsPage() {
               </Typography>
               <Box sx={{
                 mt: 0.75, mb: 2, p: 2, borderRadius: 2,
-                backgroundColor: "#08080f", border: "1px solid #1a1a2e",
+                backgroundColor: "#0d0d0d", border: "1px solid #1f1f1f",
               }}>
                 <Typography variant="body2" sx={{ whiteSpace: "pre-wrap", color: "text.secondary", lineHeight: 1.6 }}>
                   {attempt.answerText || "—"}

@@ -15,7 +15,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
         Map<String, Object> body = new LinkedHashMap<>();
-        body.put("error", ex.getMessage());
+        // Return only safe user-facing messages; don't leak internal identifiers or paths
+        String msg = ex.getMessage();
+        if (msg != null && (msg.contains("Session not found") || msg.contains("not found:"))) {
+            msg = "Resource not found.";
+        }
+        body.put("error", msg != null ? msg : "Bad request.");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 

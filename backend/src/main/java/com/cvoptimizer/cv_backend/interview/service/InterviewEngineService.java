@@ -13,6 +13,7 @@ import com.cvoptimizer.cv_backend.interview.feedback.service.AiFeedbackService;
 import com.cvoptimizer.cv_backend.interview.model.*;
 import com.cvoptimizer.cv_backend.model.ScraperResult;
 import com.cvoptimizer.cv_backend.scraper.JobScraperRouter;
+import com.cvoptimizer.cv_backend.scraper.SsrfGuard;
 import com.cvoptimizer.cv_backend.service.JobSkillExtractorService;
 import org.springframework.stereotype.Service;
 
@@ -441,7 +442,7 @@ public class InterviewEngineService {
 
             int insertIndex = session.getCurrentIndex() + 1;
             session.getQuestions().add(insertIndex, followUp);
-            session.setCurrentIndex(insertIndex);
+            // Do NOT advance currentIndex here — the normal increment at line ~576 will move into the follow-up next call
             session.setFollowUpCount(session.getFollowUpCount() + 1);
 
             return new InterviewAnswerResponse(
@@ -862,6 +863,7 @@ public class InterviewEngineService {
             return payload;
         }
 
+        SsrfGuard.assertSafe(payload);
         ScraperResult res = jobScraperRouter.scrape(payload);
 
         if (res == null) {
@@ -934,8 +936,11 @@ public class InterviewEngineService {
             return new ArrayList<>();
         }
 
+        int servedCount = session.getAnswers() != null ? session.getAnswers().size() : session.getQuestions().size();
+        List<InterviewQuestion> servedQuestions = session.getQuestions().subList(0, Math.min(servedCount, session.getQuestions().size()));
+
         Map<String, Integer> tagCounts = new HashMap<>();
-        for (InterviewQuestion q : session.getQuestions()) {
+        for (InterviewQuestion q : servedQuestions) {
             if (q == null || q.getTags() == null) continue;
             for (String t : q.getTags()) {
                 if (t == null || t.isBlank()) continue;

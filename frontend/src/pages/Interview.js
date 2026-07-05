@@ -9,7 +9,7 @@ import { submitAnswer } from "../api/interviewApi";
 const TOTAL_FALLBACK = 10;
 
 function difficultyColor(d) {
-  if (!d) return "#7a7a9e";
+  if (!d) return "#6b7280";
   switch (d.toUpperCase()) {
     case "EASY": return "#22d3a0";
     case "HARD": return "#ff4d6a";
@@ -91,7 +91,7 @@ export default function Interview() {
       {/* Header bar */}
       <Box sx={{
         display: "flex", justifyContent: "space-between", alignItems: "center",
-        mb: 3, pb: 2, borderBottom: "1px solid #1e1e30"
+        mb: 3, pb: 2, borderBottom: "1px solid #262626"
       }}>
         <Typography variant="h5" sx={{ fontWeight: 900 }}>
           Interview<Box component="span" sx={{ color: "primary.main" }}>IQ</Box>
@@ -112,16 +112,16 @@ export default function Interview() {
 
       {/* Progress */}
       <LinearProgress variant="determinate" value={progressValue}
-        sx={{ mb: 3, "& .MuiLinearProgress-bar": { background: "linear-gradient(90deg, #7c6fff, #22d3a0)" } }} />
+        sx={{ mb: 3, "& .MuiLinearProgress-bar": { background: "#3b82f6" } }} />
 
       {/* Question */}
       <Box sx={{
-        backgroundColor: "#0f0f1a", border: "1px solid #1e1e30",
+        backgroundColor: "#141414", border: "1px solid #262626",
         borderRadius: 3, p: 3, mb: 2,
       }}>
         <Box sx={{ display: "flex", gap: 1, mb: 2, flexWrap: "wrap" }}>
           <Chip label={qType} size="small" variant="outlined"
-            sx={{ borderColor: "#2a2a40", color: "text.secondary", fontFamily: "monospace" }} />
+            sx={{ borderColor: "#333", color: "text.secondary", fontFamily: "monospace" }} />
           {currentQuestion.difficulty && (
             <Chip label={currentQuestion.difficulty} size="small" variant="outlined"
               sx={{ borderColor: difficultyColor(currentQuestion.difficulty),
@@ -129,7 +129,7 @@ export default function Interview() {
           )}
           {currentQuestion.tags && [...currentQuestion.tags].slice(0, 3).map(t => (
             <Chip key={t} label={t} size="small" variant="outlined"
-              sx={{ borderColor: "#2a2a40", color: "text.secondary" }} />
+              sx={{ borderColor: "#333", color: "text.secondary" }} />
           ))}
         </Box>
 
@@ -139,13 +139,13 @@ export default function Interview() {
 
         {qType === "CODE" && currentQuestion.starterCode && (
           <Box sx={{
-            mt: 2, p: 2, borderRadius: 2, backgroundColor: "#08080f",
-            border: "1px solid #2a2a40",
+            mt: 2, p: 2, borderRadius: 2, backgroundColor: "#0d0d0d",
+            border: "1px solid #333",
           }}>
             <Typography variant="caption" sx={{ color: "text.secondary", display: "block", mb: 1 }}>
               Starter code
             </Typography>
-            <pre style={{ margin: 0, fontFamily: "monospace", fontSize: "0.85rem", color: "#a99fff", whiteSpace: "pre-wrap" }}>
+            <pre style={{ margin: 0, fontFamily: "monospace", fontSize: "0.85rem", color: "#93c5fd", whiteSpace: "pre-wrap" }}>
               {currentQuestion.starterCode}
             </pre>
           </Box>
@@ -154,7 +154,7 @@ export default function Interview() {
 
       {/* Answer */}
       <Box sx={{
-        backgroundColor: "#0f0f1a", border: "1px solid #1e1e30",
+        backgroundColor: "#141414", border: "1px solid #262626",
         borderRadius: 3, p: 3, mb: 2,
       }}>
         <Typography variant="overline" sx={{ color: "text.secondary", letterSpacing: "0.1em" }}>
@@ -172,9 +172,9 @@ export default function Interview() {
                 sx={{
                   justifyContent: "flex-start", textAlign: "left",
                   py: 1.25, px: 2,
-                  border: selectedOptionIndex === idx ? "none" : "1px solid #2a2a40",
+                  border: selectedOptionIndex === idx ? "none" : "1px solid #333",
                   background: selectedOptionIndex === idx
-                    ? "linear-gradient(135deg, #7c6fff, #5a4fd4)"
+                    ? "#3b82f6"
                     : "transparent",
                 }}>
                 <Box component="span" sx={{
@@ -197,7 +197,7 @@ export default function Interview() {
             sx={{
               mt: 1.5,
               "& textarea": qType === "CODE" ? {
-                fontFamily: "monospace", fontSize: "0.875rem", color: "#a99fff"
+                fontFamily: "monospace", fontSize: "0.875rem", color: "#93c5fd"
               } : {},
             }}
           />
@@ -211,13 +211,13 @@ export default function Interview() {
           <Button
             variant="contained" onClick={() => handleSubmit(false)} disabled={loading}
             sx={{
-              px: 3, background: "linear-gradient(135deg, #7c6fff, #5a4fd4)",
-              "&:hover": { background: "linear-gradient(135deg, #9180ff, #6c5fe8)" },
+              px: 3, background: "#3b82f6",
+              "&:hover": { background: "#4f9cff" },
             }}>
             {loading ? <CircularProgress size={20} color="inherit" /> : "Submit"}
           </Button>
           <Button variant="outlined" onClick={() => handleSubmit(true)} disabled={loading}
-            sx={{ color: "text.secondary", borderColor: "#2a2a40" }}>
+            sx={{ color: "text.secondary", borderColor: "#333" }}>
             Skip
           </Button>
         </Box>
@@ -226,7 +226,7 @@ export default function Interview() {
       {/* Feedback from last answer */}
       {lastFeedback && (
         <Box sx={{
-          backgroundColor: "#0f0f1a", border: "1px solid #1e1e30",
+          backgroundColor: "#141414", border: "1px solid #262626",
           borderRadius: 3, p: 3,
         }}>
           <Typography variant="overline" sx={{ color: "text.secondary", letterSpacing: "0.1em" }}>
@@ -239,7 +239,7 @@ export default function Interview() {
               size="small"
               sx={{
                 fontWeight: 800,
-                background: lastFeedback.status === "IN_PROGRESS" ? "#1a1a2e" : "transparent",
+                background: lastFeedback.status === "IN_PROGRESS" ? "#1f1f1f" : "transparent",
                 color: lastFeedback.status?.includes("FAIL") ? "#ff4d6a" : "#22d3a0",
                 border: "1px solid",
                 borderColor: lastFeedback.status?.includes("FAIL") ? "#ff4d6a" : "#22d3a0",
@@ -249,15 +249,15 @@ export default function Interview() {
               <Chip
                 label={`Score ${lastFeedback.scoreSoFar}/${lastFeedback.maxScoreSoFar}`}
                 size="small" variant="outlined"
-                sx={{ borderColor: "#2a2a40", color: "text.secondary", fontFamily: "monospace" }}
+                sx={{ borderColor: "#333", color: "text.secondary", fontFamily: "monospace" }}
               />
             )}
             {lastFeedback.evaluationSource && (
               <Chip
                 label={lastFeedback.evaluationSource === "AI" ? "🤖 AI" : "⚙ Keyword"}
                 size="small" variant="outlined"
-                sx={{ borderColor: lastFeedback.evaluationSource === "AI" ? "#7c6fff" : "#2a2a40",
-                      color: lastFeedback.evaluationSource === "AI" ? "#a99fff" : "text.secondary" }}
+                sx={{ borderColor: lastFeedback.evaluationSource === "AI" ? "#60a5fa" : "#333",
+                      color: lastFeedback.evaluationSource === "AI" ? "#93c5fd" : "text.secondary" }}
               />
             )}
           </Box>

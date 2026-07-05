@@ -79,7 +79,7 @@ public class InterviewController {
     @Operation(summary = "Get interview history", description = "Returns paginated past sessions for the given userId, most recent first.")
     public ResponseEntity<List<InterviewHistoryItemDto>> history(
             @Parameter(description = "Zero-based page index") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size,
+            @Parameter(description = "Page size (max 100)") @RequestParam(defaultValue = "20") int size,
             @Parameter(description = "Browser guest ID from localStorage") @RequestParam(required = false) String userId
     ) {
         return ResponseEntity.ok(history.getHistory(userId, page, size));
