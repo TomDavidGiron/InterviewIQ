@@ -41,6 +41,7 @@ public class MicrosoftScraper {
                             + "Chrome/124.0.0.0 Safari/537.36"));
 
             Page page = context.newPage();
+            SsrfGuard.guardNavigation(page);
             page.navigate(url);
 
             // Wait for h1 to appear; fall back to a timed wait if the selector never loads

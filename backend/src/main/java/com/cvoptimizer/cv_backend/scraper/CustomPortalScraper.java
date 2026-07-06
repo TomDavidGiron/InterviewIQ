@@ -16,6 +16,7 @@ public class CustomPortalScraper {
                     new BrowserType.LaunchOptions().setHeadless(true)
             );
             Page page = browser.newPage();
+            SsrfGuard.guardNavigation(page);
             page.navigate(url);
             page.waitForTimeout(3000); // wait for content to load
 

@@ -17,6 +17,7 @@ public class MultiJobListingScraper {
             Browser browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(true));
             BrowserContext context = browser.newContext();
             Page page = context.newPage();
+            SsrfGuard.guardNavigation(page);
             page.navigate(url);
             page.waitForTimeout(5000); // Wait longer for JS to load
 
@@ -35,6 +36,7 @@ public class MultiJobListingScraper {
                     String fullLink = href.startsWith("http") ? href : resolveRelativeUrl(url, href);
 
                     Page jobPage = context.newPage();
+                    SsrfGuard.guardNavigation(jobPage);
                     jobPage.navigate(fullLink);
                     jobPage.waitForTimeout(3000);
 

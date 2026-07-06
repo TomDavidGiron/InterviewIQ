@@ -20,6 +20,12 @@ public class SeleniumScraper {
         WebDriver driver = new ChromeDriver(options);
         try {
             driver.get(url);
+
+            // Best-effort redirect check: WebDriver's basic API can't intercept navigation
+            // before it fires (unlike the Jsoup/Playwright scrapers), so this only stops us
+            // from returning content scraped from an internal address after the fact.
+            SsrfGuard.assertSafe(driver.getCurrentUrl());
+
             Thread.sleep(3000); // Let content load
 
             String title = tryGetFirstMatch(driver, List.of("h1", "h2", "header"));

@@ -1,5 +1,7 @@
 package com.cvoptimizer.cv_backend.scraper;
 
+import com.microsoft.playwright.Page;
+
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -9,11 +11,22 @@ public final class SsrfGuard {
 
     private SsrfGuard() {}
 
-    /**
-     * Throws IllegalArgumentException if the URL targets a private, loopback,
-     * or link-local address — preventing the server from being used as a proxy
-     * to reach internal infrastructure.
-     */
+   
+    public static void guardNavigation(Page page) {
+        page.route("**/*", route -> {
+            if (route.request().isNavigationRequest()) {
+                try {
+                    assertSafe(route.request().url());
+                } catch (IllegalArgumentException e) {
+                    route.abort();
+                    return;
+                }
+            }
+            route.resume();
+        });
+    }
+
+    
     public static void assertSafe(String rawUrl) {
         URL url;
         try {

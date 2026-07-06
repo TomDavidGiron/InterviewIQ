@@ -37,7 +37,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/interview/*/summary",
                         "/api/interview/job-specific",
                         "/api/scrape",
-                        "/api/scrape/*"
+                        "/api/scrape/*",
+                        "/api/image-upload"
                 );
     }
 }

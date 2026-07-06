@@ -1,11 +1,12 @@
 package com.cvoptimizer.cv_backend.scraper;
 
 import com.cvoptimizer.cv_backend.model.ScraperResult;
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
-import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -13,9 +14,11 @@ import java.util.regex.Pattern;
 
 public class JsoupSmartRecruitersScraper {
 
+    private static final int MAX_REDIRECTS = 5;
+
     public static ScraperResult scrape(String url) {
         try {
-            Document doc = Jsoup.connect(url).userAgent("Mozilla").get();
+            Document doc = fetchFollowingSafeRedirects(url);
 
             // Extract raw body text
             String bodyText = doc.body().text();
@@ -38,7 +41,7 @@ public class JsoupSmartRecruitersScraper {
 
             return new ScraperResult(title, company, location, description, requirements);
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return new ScraperResult(
                     "SmartRecruiters Scraper Failed",
@@ -48,6 +51,27 @@ public class JsoupSmartRecruitersScraper {
                     List.of()
             );
         }
+    }
+
+    
+    private static Document fetchFollowingSafeRedirects(String url) throws Exception {
+        String currentUrl = url;
+        for (int i = 0; i <= MAX_REDIRECTS; i++) {
+            SsrfGuard.assertSafe(currentUrl);
+            Connection.Response response = Jsoup.connect(currentUrl)
+                    .userAgent("Mozilla")
+                    .followRedirects(false)
+                    .execute();
+
+            int status = response.statusCode();
+            String location = response.header("Location");
+            if (status >= 300 && status < 400 && location != null && !location.isBlank()) {
+                currentUrl = new URL(new URL(currentUrl), location).toString();
+                continue;
+            }
+            return response.parse();
+        }
+        throw new IllegalStateException("Too many redirects while fetching " + url);
     }
 
     private static String extractLocationFromBody(String body, String jobTitle) {
