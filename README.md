@@ -1,4 +1,4 @@
-# InterviewIQ — AI Interview Coach
+# InterviewIQ  
 
 ![CI](https://github.com/TomDavidGiron/InterviewIQ/actions/workflows/ci.yml/badge.svg)
 
