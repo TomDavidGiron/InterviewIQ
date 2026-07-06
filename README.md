@@ -1,25 +1,24 @@
-# InterviewIQ — AI Interview Coach
+# InterviewIQ  
 
 ![CI](https://github.com/TomDavidGiron/InterviewIQ/actions/workflows/ci.yml/badge.svg)
 
 A backend-focused AI-powered technical interview simulator. Generates adaptive interview questions, evaluates answers using OpenAI, tracks weak skills over time, and produces personalised study plans.
 
-Built as a portfolio project to demonstrate backend engineering, AI system architecture, and full-stack integration.
 
 ---
 
 ## Features
 
-- **Adaptive interview engine** — 10-question sessions with difficulty that scales up/down based on your performance (consecutive pass/fail streaks)
-- **AI evaluation** — answers scored by GPT-4o with strengths, missing concepts, and feedback; falls back to keyword scoring if no API key is set
-- **RAG knowledge retrieval** — pgvector similarity search injects relevant context into the evaluation prompt
-- **Skill graph** — per-browser persistent skill scores, exponentially weighted across sessions
-- **AI feedback & study plan** — end-of-session diagnosis with a prioritised 3-step study plan
-- **Job-specific interviews** — paste a job URL, description text, or screenshot; skills are extracted and questions are tailored to the role
-- **OCR** — extract job descriptions from screenshots using Tesseract
-- **Multi-strategy scraping** — Jsoup → Playwright → Selenium fallback chain for job posting URLs
-- **800 questions** — backend, Java, algorithms, frontend, cloud, security, behavioural, and more; each tagged EASY / MEDIUM / HARD
-- **Rate limiting** — 20 requests/minute per IP on answer submission endpoints
+- **Adaptive interview engine** - 10-question sessions with difficulty that scales up/down based on your performance (consecutive pass/fail streaks)
+- **AI evaluation** - answers scored by GPT-4o with strengths, missing concepts, and feedback; falls back to keyword scoring if no API key is set
+- **RAG knowledge retrieval** - pgvector similarity search injects relevant context into the evaluation prompt
+- **Skill graph** - per-browser persistent skill scores, exponentially weighted across sessions
+- **AI feedback & study plan** - end-of-session diagnosis with a prioritised 3-step study plan
+- **Job-specific interviews** - paste a job URL, description text, or screenshot; skills are extracted and questions are tailored to the role
+- **OCR** - extract job descriptions from screenshots using Tesseract
+- **Multi-strategy scraping** - Jsoup → Playwright → Selenium fallback chain for job posting URLs
+- **800 questions** - backend, Java, algorithms, frontend, cloud, security, behavioural, and more; each tagged EASY / MEDIUM / HARD
+- **Rate limiting** - 20 requests/minute per IP on answer submission endpoints
 
 ---
 
@@ -194,10 +193,10 @@ GET /summary
 ### Adaptive Agent
 
 The `RuleBasedInterviewAgentService` tracks:
-- `consecutivePasses` / `consecutiveFails` — triggers difficulty change after 2 in a row
-- `currentDifficulty` (1 EASY → 2 MEDIUM → 3 HARD) — filters question selection
-- `followUpCount` — asks a targeted follow-up when a concept is missing, max once per question
-- Early finish — triggers if score drops below 40% after question 7
+- `consecutivePasses` / `consecutiveFails` - triggers difficulty change after 2 in a row
+- `currentDifficulty` (1 EASY → 2 MEDIUM → 3 HARD) - filters question selection
+- `followUpCount` - asks a targeted follow-up when a concept is missing, max once per question
+- Early finish - triggers if score drops below 40% after question 7
 
 ### RAG Pipeline
 
