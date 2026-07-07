@@ -26,7 +26,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .allowedOrigins(origins.toArray(String[]::new))
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
-                .allowCredentials(true);
+                .allowCredentials(false);
     }
 
     @Override

@@ -8,6 +8,7 @@ RUN mvn dependency:go-offline -q
 
 COPY src ./src
 RUN mvn package -DskipTests -q
+RUN mvn dependency:copy-dependencies -DoutputDirectory=target/dependency -DincludeScope=runtime -q
 
 # ── Run stage ─────────────────────────────────────────────────────────────────
 FROM eclipse-temurin:21-jre-jammy
@@ -19,6 +20,14 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /app/target/*.jar app.jar
+COPY --from=build /app/target/dependency ./dependency
+
+# Playwright's default browser set plus OS libraries. Only Chromium is used by
+# the scraper code, but Playwright validates all three at runtime and silently
+# downloads whichever are missing on first use — pre-installing all of them
+# here avoids a multi-minute download happening inside a live request.
+RUN java -cp "dependency/*" com.microsoft.playwright.CLI install --with-deps \
+ && rm -rf dependency
 
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
