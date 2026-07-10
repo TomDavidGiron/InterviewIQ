@@ -40,7 +40,7 @@ public class QuestionBankService {
         Set<String> tags = e.parsedTags();
         Set<String> keywords = e.parsedKeywords();
 
-        return switch (type) {
+        InterviewQuestion question = switch (type) {
             case MCQ -> {
                 List<String> options = e.getOptions() != null
                         ? objectMapper.readValue(e.getOptions(), new TypeReference<List<String>>() {})
@@ -52,6 +52,10 @@ public class QuestionBankService {
                     e.getStarterCode() != null ? e.getStarterCode() : "", keywords);
             default -> new InterviewQuestion(e.getId(), e.getText(), tags, e.isCritical(), keywords);
         };
+        if (e.getDifficulty() != null) {
+            question.setDifficulty(e.getDifficulty());
+        }
+        return question;
     }
 
     // Used only by QuestionDbSeeder on first startup to populate the DB.

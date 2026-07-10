@@ -58,10 +58,13 @@ public class ImageUploadController {
 
             Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
 
-            File savedImage = target.toFile();
-            String extractedText = ocrService.extractTextFromImage(savedImage);
-
-            return ResponseEntity.ok(extractedText);
+            try {
+                File savedImage = target.toFile();
+                String extractedText = ocrService.extractTextFromImage(savedImage);
+                return ResponseEntity.ok(extractedText);
+            } finally {
+                Files.deleteIfExists(target);
+            }
 
         } catch (IOException e) {
             return ResponseEntity.internalServerError().body("Image upload failed");

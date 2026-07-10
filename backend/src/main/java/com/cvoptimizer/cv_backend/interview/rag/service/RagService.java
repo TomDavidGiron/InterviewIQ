@@ -1,4 +1,4 @@
-package com.cvoptimizer.cv_backend.interview.rag.service;import com.cvoptimizer.cv_backend.interview.rag.service.RagService;
+package com.cvoptimizer.cv_backend.interview.rag.service;
 
 import com.cvoptimizer.cv_backend.interview.rag.config.RagProperties;
 import com.cvoptimizer.cv_backend.interview.rag.model.KnowledgeChunk;
