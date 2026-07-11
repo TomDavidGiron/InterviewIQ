@@ -48,10 +48,13 @@ public class CustomPortalScraper {
                 );
             }
 
+            String company = extractCompany(page);
+            String location = extractLocation(page);
+
             return new ScraperResult(
                     title,
-                    "Unknown Company",
-                    "Unknown Location",
+                    company,
+                    location,
                     description,
                     requirements
             );
@@ -65,6 +68,28 @@ public class CustomPortalScraper {
                     List.of()
             );
         }
+    }
+
+    private static String extractCompany(Page page) {
+        try {
+            Locator meta = page.locator("meta[property='og:site_name']");
+            if (meta.count() > 0) {
+                String content = meta.first().getAttribute("content");
+                if (content != null && !content.isBlank()) return content.trim();
+            }
+        } catch (Exception ignored) {}
+        return "Unknown Company";
+    }
+
+    private static String extractLocation(Page page) {
+        try {
+            Locator loc = page.locator("[class*='location'], [data-testid*='location'], [id*='location']");
+            if (loc.count() > 0) {
+                String text = loc.first().innerText().trim();
+                if (!text.isBlank()) return text;
+            }
+        } catch (Exception ignored) {}
+        return "Unknown Location";
     }
 
     private static String findJobSection(Page page) {

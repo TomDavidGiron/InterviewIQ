@@ -15,7 +15,13 @@ public class SeleniumScraper {
     public static ScraperResult scrape(String url) {
         WebDriverManager.chromedriver().setup();
         ChromeOptions options = new ChromeOptions();
-        options.setBinary("/usr/bin/chromium");
+        // Only pin an explicit browser binary if one is configured — Selenium Manager
+        // (bundled since Selenium 4.6+) auto-resolves the installed Chrome/Chromium
+        // otherwise. A hardcoded Linux path here broke every local Windows run.
+        String chromeBin = System.getenv("CHROME_BIN");
+        if (chromeBin != null && !chromeBin.isBlank()) {
+            options.setBinary(chromeBin);
+        }
         options.addArguments("--headless", "--no-sandbox", "--disable-dev-shm-usage");
 
         WebDriver driver;

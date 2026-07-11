@@ -1,12 +1,8 @@
 package com.cvoptimizer.cv_backend.scraper;
 
 import com.cvoptimizer.cv_backend.model.ScraperResult;
-import org.jsoup.Connection;
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -14,21 +10,19 @@ import java.util.regex.Pattern;
 
 public class JsoupSmartRecruitersScraper {
 
-    private static final int MAX_REDIRECTS = 5;
-
     public static ScraperResult scrape(String url) {
         try {
-            Document doc = fetchFollowingSafeRedirects(url);
+            Document doc = SsrfGuard.fetchFollowingSafeRedirects(url);
 
             // Extract raw body text
             String bodyText = doc.body().text();
 
             // Title: from <title>, clean SmartRecruiters suffix
             String rawTitle = doc.title();
-            String title = rawTitle.replace("| SmartRecruiters", "").replace("Omio", "").trim();
+            String title = rawTitle.replace("| SmartRecruiters", "").trim();
 
-            // Company: hardcode for SmartRecruiters URLs or extract from title
-            String company = "Omio";
+            // Company: og:site_name meta tag, else fall back to trailing " - Company" in the title
+            String company = extractCompany(doc, title);
 
             // Location: after the job title in bodyText
             String location = extractLocationFromBody(bodyText, title);
@@ -53,25 +47,19 @@ public class JsoupSmartRecruitersScraper {
         }
     }
 
-    
-    private static Document fetchFollowingSafeRedirects(String url) throws Exception {
-        String currentUrl = url;
-        for (int i = 0; i <= MAX_REDIRECTS; i++) {
-            SsrfGuard.assertSafe(currentUrl);
-            Connection.Response response = Jsoup.connect(currentUrl)
-                    .userAgent("Mozilla")
-                    .followRedirects(false)
-                    .execute();
-
-            int status = response.statusCode();
-            String location = response.header("Location");
-            if (status >= 300 && status < 400 && location != null && !location.isBlank()) {
-                currentUrl = new URL(new URL(currentUrl), location).toString();
-                continue;
-            }
-            return response.parse();
+    private static String extractCompany(Document doc, String title) {
+        String siteName = doc.select("meta[property=og:site_name]").attr("content");
+        if (siteName != null && !siteName.isBlank()) {
+            return siteName.trim();
         }
-        throw new IllegalStateException("Too many redirects while fetching " + url);
+
+        // SmartRecruiters titles are commonly "Job Title - Company"
+        int dash = title.lastIndexOf(" - ");
+        if (dash > 0 && dash + 3 < title.length()) {
+            return title.substring(dash + 3).trim();
+        }
+
+        return "Unknown Company";
     }
 
     private static String extractLocationFromBody(String body, String jobTitle) {

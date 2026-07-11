@@ -19,7 +19,18 @@ public class JobScraperRouter {
             }
         }
 
-        // Step 1: Site-specific scrapers
+        // Step 1: Universal schema.org/JobPosting structured-data extraction.
+        // Most ATS platforms (Greenhouse, Lever, Workday, iCIMS, SmartRecruiters,
+        // LinkedIn, Indeed, most corporate careers pages) embed this for SEO, so it
+        // covers far more sites than any hand-tuned selector and skips launching a
+        // full browser for the common case.
+        ScraperResult jsonLdResult = JsonLdJobPostingScraper.scrape(url);
+        if (!isInvalid(jsonLdResult)) {
+            System.out.println("[Router] Using JSON-LD JobPosting result: " + jsonLdResult.getTitle());
+            return jsonLdResult;
+        }
+
+        // Step 2: Site-specific scrapers
         ScraperResult result;
         if (url.contains("smartrecruiters.com")) {
             result = JsoupSmartRecruitersScraper.scrape(url);
@@ -29,7 +40,7 @@ public class JobScraperRouter {
             result = PlaywrightScraper.scrape(url);
         }
 
-        // Step 2: Fallbacks
+        // Step 3: Fallbacks
         if (isInvalid(result)) {
             result = SeleniumScraper.scrape(url);
         }
