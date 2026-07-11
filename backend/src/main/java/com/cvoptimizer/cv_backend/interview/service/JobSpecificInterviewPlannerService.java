@@ -33,6 +33,10 @@ public class JobSpecificInterviewPlannerService {
         this.jobSpecificQuestionGeneratorService = jobSpecificQuestionGeneratorService;
     }
 
+    // Cap only to guard against pathological input (e.g. a huge pasted document) —
+    // real postings rarely detect more than a couple dozen distinct skills.
+    private static final int MAX_PRIORITIZED_SKILLS = 25;
+
     public JobSpecificInterviewPlan buildPlan(String jobText, String topicOverride) {
         JobSpecificInterviewPlan plan = new JobSpecificInterviewPlan();
 
@@ -108,7 +112,7 @@ public class JobSpecificInterviewPlannerService {
             prioritized.addAll(analysis.getNiceToHaveSkills());
         }
 
-        return prioritized.stream().limit(8).collect(Collectors.toList());
+        return prioritized.stream().limit(MAX_PRIORITIZED_SKILLS).collect(Collectors.toList());
     }
 
     private Set<String> extractCoveredSkills(List<InterviewQuestion> questions, Set<String> prioritizedSkills) {

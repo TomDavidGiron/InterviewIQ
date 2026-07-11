@@ -100,6 +100,8 @@ public class InterviewEngineService {
         List<InterviewQuestion> selected;
         List<String> prioritizedSkills = List.of();
         String resolvedJobText = "";
+        String seniorityHint = null;
+        String domainHint = null;
 
         if (payload.isBlank()) {
             skills = Collections.emptySet();
@@ -133,6 +135,9 @@ public class InterviewEngineService {
             prioritizedSkills = plan.getPrioritizedSkills() == null
                     ? List.of()
                     : plan.getPrioritizedSkills();
+
+            seniorityHint = plan.getSeniorityHint();
+            domainHint = plan.getDomainHint();
 
             selected = plan.getSelectedQuestions() == null
                     ? new ArrayList<>()
@@ -169,7 +174,13 @@ public class InterviewEngineService {
         store.put(session);
 
         InterviewQuestion first = selected.isEmpty() ? null : selected.get(0);
-        return new InterviewStartResponse(sessionId, toDto(first));
+        InterviewStartResponse response = new InterviewStartResponse(sessionId, toDto(first));
+        response.setJobSpecific(session.isJobSpecific());
+        response.setRoleHint(roleHint);
+        response.setSeniorityHint(seniorityHint);
+        response.setDomainHint(domainHint);
+        response.setPrioritizedJobSkills(prioritizedSkills);
+        return response;
     }
 
     private void finalizeAndPersistSession(String sessionId, InterviewSession session) {
@@ -914,11 +925,19 @@ public class InterviewEngineService {
             return "python-backend";
         }
 
-        if (lower.contains("etl") || lower.contains("airflow") || lower.contains("dbt")) {
+        // Only classify as data-engineer/data-analyst when there's no competing generic
+        // backend/cloud signal — otherwise one incidental tag (e.g. a single "A/B testing"
+        // mention in an otherwise Docker/Kubernetes/AWS-heavy posting) wrongly overrides a
+        // much stronger backend signal.
+        boolean hasBackendInfraSignal = lower.stream().anyMatch(s -> Set.of(
+                "docker", "kubernetes", "aws", "microservices", "ci/cd", "system design",
+                "rest", "concurrency", "message queues").contains(s));
+
+        if (!hasBackendInfraSignal && (lower.contains("etl") || lower.contains("airflow") || lower.contains("dbt"))) {
             return "data-engineer";
         }
 
-        if (lower.contains("data analytics")) {
+        if (!hasBackendInfraSignal && lower.contains("data analytics")) {
             return "data-analyst";
         }
 

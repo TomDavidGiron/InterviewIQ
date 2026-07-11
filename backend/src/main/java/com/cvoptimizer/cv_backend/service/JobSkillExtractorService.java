@@ -25,7 +25,9 @@ public class JobSkillExtractorService {
         WORD_BANK.put("PostgreSQL", List.of("postgresql", "postgres"));
         WORD_BANK.put("Docker", List.of("docker", "containers", "containerization"));
         WORD_BANK.put("Redis", List.of("redis", "cache", "caching"));
-        WORD_BANK.put("REST", List.of("rest", "rest api", "restful"));
+        WORD_BANK.put("REST", List.of("rest", "rest api", "restful", "api"));
+        WORD_BANK.put("Terraform", List.of("terraform"));
+        WORD_BANK.put("IaC", List.of("infrastructure as code", "iac", "cloudformation", "aws cdk"));
         WORD_BANK.put("Microservices", List.of("microservices", "distributed systems"));
         WORD_BANK.put("AWS", List.of("aws", "amazon web services", "ec2", "s3", "lambda"));
         WORD_BANK.put("Concurrency", List.of("concurrency", "multithreading", "thread safety", "parallelism"));
@@ -42,7 +44,25 @@ public class JobSkillExtractorService {
         WORD_BANK.put("Airflow", List.of("airflow", "dag", "dags"));
         WORD_BANK.put("dbt", List.of("dbt", "data build tool"));
         WORD_BANK.put("Data Warehousing", List.of("snowflake", "bigquery", "redshift", "data warehouse"));
-        WORD_BANK.put("Data Analytics", List.of("pandas", "a/b testing", "tableau", "power bi", "data analysis"));
+        WORD_BANK.put("Data Analytics", List.of("pandas", "a/b testing", "tableau", "power bi", "data analysis",
+                "causal inference", "statistical analysis"));
+        WORD_BANK.put("Machine Learning", List.of("machine learning", "ml algorithms", "ml models", "deep learning"));
+        WORD_BANK.put("NLP", List.of("nlp", "natural language processing"));
+        WORD_BANK.put("Generative AI", List.of("generative ai", "genai", "gen ai", "llm", "llms",
+                "large language model", "large language models", "prompt engineering",
+                "retrieval augmented generation", "vector database", "vector databases",
+                "langchain", "agentic", "mlops"));
+        WORD_BANK.put("Node.js", List.of("nodejs", "node.js", "node js"));
+        WORD_BANK.put("Scala", List.of("scala"));
+        WORD_BANK.put("Go", List.of("golang"));
+        WORD_BANK.put("Git", List.of("git", "version control"));
+        WORD_BANK.put("GitHub", List.of("github"));
+        WORD_BANK.put("Scrum", List.of("scrum", "sprint planning", "daily standup", "sprint retrospective"));
+        WORD_BANK.put("Kanban", List.of("kanban"));
+        // Bare "safe" is far too common a word to match directly (false-positive risk) —
+        // only match the specific multi-word phrases that actually signal the framework.
+        WORD_BANK.put("SAFe", List.of("scaled agile framework", "scaled agile", "agile release train"));
+        WORD_BANK.put("Jira", List.of("jira"));
     }
 
     public Set<String> extractSkills(String text) {

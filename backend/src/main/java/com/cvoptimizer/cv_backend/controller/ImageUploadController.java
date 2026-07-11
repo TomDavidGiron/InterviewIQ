@@ -61,6 +61,10 @@ public class ImageUploadController {
             try {
                 File savedImage = target.toFile();
                 String extractedText = ocrService.extractTextFromImage(savedImage);
+                if (extractedText == null || extractedText.startsWith("OCR Error:")) {
+                    return ResponseEntity.internalServerError()
+                            .body("OCR failed to process this image: " + extractedText);
+                }
                 return ResponseEntity.ok(extractedText);
             } finally {
                 Files.deleteIfExists(target);
