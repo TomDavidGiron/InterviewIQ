@@ -55,7 +55,7 @@ public class RuleBasedInterviewAgentService implements InterviewAgentService {
         if (failed && hasMissingConcepts && canAskFollowUp) {
             String concept = context.getMissingConcepts().get(0);
             String prompt = "Follow-up: you missed the concept '" + concept
-                    + "'. Explain it with a practical backend example and when it matters in production.";
+                    + "'. Explain it with a practical real-world example and when it matters in production.";
             return AgentDecision.followUp("User missed an important concept", prompt, true);
         }
 

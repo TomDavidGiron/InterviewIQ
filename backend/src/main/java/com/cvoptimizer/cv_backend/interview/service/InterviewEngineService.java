@@ -164,6 +164,7 @@ public class InterviewEngineService {
         session.setJobSpecific(jobSpecificOnly || !payload.isBlank());
         session.setJobDescriptionText(resolvedJobText);
         session.setPrioritizedJobSkills(prioritizedSkills);
+        session.setTargetRoleHint(roleHint);
 
         store.put(session);
 
@@ -328,6 +329,7 @@ public class InterviewEngineService {
         summary.setTagBreakdown(breakdown);
         summary.setTagWeaknesses(weakTags);
         summary.setDiagnosis(diagnosis);
+        summary.setTargetRoleHint(session.getTargetRoleHint());
 
         try {
             AiFeedbackRequest feedbackRequest = new AiFeedbackRequest();
@@ -339,6 +341,7 @@ public class InterviewEngineService {
             feedbackRequest.setTagBreakdown(toTagBreakdownMaps(breakdown));
             feedbackRequest.setSkillGraph(toSkillGraphMap(breakdown));
             feedbackRequest.setAttempts(feedbackAttempts);
+            feedbackRequest.setRoleHint(session.getTargetRoleHint());
 
             AiFeedbackResponse aiFeedback = aiFeedbackService.generateFeedback(feedbackRequest);
 
@@ -645,7 +648,7 @@ public class InterviewEngineService {
         if (!missing.isEmpty()) {
             return "Follow-up: explain these missing concepts with a practical example: " + String.join(", ", missing);
         }
-        return "Follow-up: please go one level deeper and explain your reasoning with a practical backend example.";
+        return "Follow-up: please go one level deeper and explain your reasoning with a practical real-world example.";
     }
 
     private InterviewQuestion findQuestionForTopicAndDifficulty(InterviewSession session, String topic, int difficulty) {
@@ -894,16 +897,29 @@ public class InterviewEngineService {
             return "backend";
         }
 
-        if (skills.contains("spring") || skills.contains("spring boot") || skills.contains("java")) {
+        Set<String> lower = skills.stream()
+                .filter(s -> s != null)
+                .map(s -> s.trim().toLowerCase())
+                .collect(Collectors.toSet());
+
+        if (lower.contains("spring") || lower.contains("spring boot") || lower.contains("java")) {
             return "java-backend";
         }
 
-        if (skills.contains("go")) {
+        if (lower.contains("go")) {
             return "go-backend";
         }
 
-        if (skills.contains("python")) {
+        if (lower.contains("python")) {
             return "python-backend";
+        }
+
+        if (lower.contains("etl") || lower.contains("airflow") || lower.contains("dbt")) {
+            return "data-engineer";
+        }
+
+        if (lower.contains("data analytics")) {
+            return "data-analyst";
         }
 
         return "backend";

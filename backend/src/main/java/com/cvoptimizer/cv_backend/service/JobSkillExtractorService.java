@@ -37,6 +37,12 @@ public class JobSkillExtractorService {
         WORD_BANK.put("CI/CD", List.of("ci/cd", "ci cd", "pipeline", "github actions", "jenkins"));
         WORD_BANK.put("Kubernetes", List.of("kubernetes", "k8s"));
         WORD_BANK.put("Message Queues", List.of("kafka", "rabbitmq", "message queue", "messaging"));
+        WORD_BANK.put("Python", List.of("python"));
+        WORD_BANK.put("ETL", List.of("etl", "elt", "data pipeline", "data pipelines"));
+        WORD_BANK.put("Airflow", List.of("airflow", "dag", "dags"));
+        WORD_BANK.put("dbt", List.of("dbt", "data build tool"));
+        WORD_BANK.put("Data Warehousing", List.of("snowflake", "bigquery", "redshift", "data warehouse"));
+        WORD_BANK.put("Data Analytics", List.of("pandas", "a/b testing", "tableau", "power bi", "data analysis"));
     }
 
     public Set<String> extractSkills(String text) {
@@ -105,6 +111,7 @@ public class JobSkillExtractorService {
         if (normalizedText.contains("platform")) return "platform engineer";
         if (normalizedText.contains("devops")) return "devops engineer";
         if (normalizedText.contains("data engineer")) return "data engineer";
+        if (normalizedText.contains("data analyst") || normalizedText.contains("data science")) return "data analyst";
         return "software engineer";
     }
 

@@ -8,8 +8,9 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * 300 questions across frontend, CS fundamentals, behavioral, cloud/DevOps,
- * web security, and testing. IDs Q501-Q800. No overlap with QuestionBankService.
+ * Questions across frontend, CS fundamentals, behavioral, cloud/DevOps,
+ * web security, testing, and (Q801+) Python/data engineering/data analytics.
+ * IDs Q501-Q910. No overlap with QuestionBankService.
  */
 @Component
 public class QuestionBankExpansion {
@@ -29,6 +30,11 @@ public class QuestionBankExpansion {
         addDockerKubernetes(q);
         addWebSecurity(q);
         addTesting(q);
+        addPython(q);
+        addEtlDataPipelines(q);
+        addAirflow(q);
+        addDbt(q);
+        addDataWarehousingAnalytics(q);
         return q;
     }
 
@@ -1555,5 +1561,580 @@ public class QuestionBankExpansion {
                 "What is the difference between `assertEquals` and `assertSame` in JUnit?",
                 Set.of("testing"), false,
                 Set.of("assertEquals", "assertSame", "reference", "value"), "EASY"));
+    }
+
+    // =====================================================================
+    // Python  (Q801-Q825)
+    // =====================================================================
+    private void addPython(List<InterviewQuestion> q) {
+        q.add(new InterviewQuestion("Q801",
+                "What is the GIL (Global Interpreter Lock) in CPython, and how does it affect multithreaded Python programs?",
+                Set.of("python"), false,
+                Set.of("GIL", "threads", "CPU-bound", "I/O-bound"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q802",
+                "What is a Python decorator? Give an example of when you'd use one.",
+                Set.of("python"), false,
+                Set.of("decorator", "wrap", "function"), "EASY"));
+
+        q.add(new InterviewQuestion("Q803",
+                "What is the difference between a Python list comprehension and a generator expression?",
+                Set.of("python"), false,
+                Set.of("list comprehension", "generator", "lazy", "memory"), "EASY"));
+
+        q.add(new InterviewQuestion("Q804",
+                "What does the `yield` keyword do? How does a generator function differ from a regular function?",
+                Set.of("python"), false,
+                Set.of("yield", "generator", "lazy evaluation", "state"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q805",
+                "Explain Python's `*args` and `**kwargs`. When would you use them?",
+                Set.of("python"), false,
+                Set.of("args", "kwargs", "variadic", "unpacking"), "EASY"));
+
+        q.add(new InterviewQuestion("Q806",
+                "What is the mutable default argument bug in Python? How do you avoid it?",
+                Set.of("python"), false,
+                Set.of("mutable default", "list", "None"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q807",
+                "What are Python type hints? Are they enforced at runtime?",
+                Set.of("python"), false,
+                Set.of("type hints", "mypy", "static typing", "runtime"), "EASY"));
+
+        q.add(new InterviewQuestion("Q808",
+                "What is the difference between `==` and `is` in Python?",
+                Set.of("python"), false,
+                Set.of("equality", "identity"), "EASY"));
+
+        q.add(new InterviewQuestion("Q809",
+                "What is a context manager in Python? How does the `with` statement use it?",
+                Set.of("python"), false,
+                Set.of("context manager", "with", "__enter__", "__exit__"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q810",
+                "What is the difference between a Python module and a package?",
+                Set.of("python"), false,
+                Set.of("module", "package", "__init__"), "EASY"));
+
+        q.add(new InterviewQuestion("Q811",
+                "What are Python virtual environments, and why are they used?",
+                Set.of("python"), false,
+                Set.of("venv", "virtualenv", "dependency isolation"), "EASY"));
+
+        q.add(new InterviewQuestion("Q812",
+                "What is the difference between `pip` with a requirements.txt and a tool like Poetry for dependency management?",
+                Set.of("python"), false,
+                Set.of("pip", "poetry", "requirements", "lock file"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q813",
+                "What is a Python dataclass, and what boilerplate does it save you from writing?",
+                Set.of("python"), false,
+                Set.of("dataclass", "__init__", "__repr__", "boilerplate"), "EASY"));
+
+        q.add(new InterviewQuestion("Q814",
+                "Explain Python's exception handling with `try`/`except`/`else`/`finally`.",
+                Set.of("python"), false,
+                Set.of("try", "except", "else", "finally"), "EASY"));
+
+        q.add(new InterviewQuestion("Q815",
+                "What is duck typing in Python?",
+                Set.of("python"), false,
+                Set.of("duck typing", "dynamic typing"), "EASY"));
+
+        q.add(new InterviewQuestion("Q816",
+                "What is the difference between `async def` and a regular function in Python? How does `await` work?",
+                Set.of("python", "async"), false,
+                Set.of("async", "await", "coroutine", "event loop"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q817",
+                "What is the difference between multiprocessing and multithreading in Python, and why is multiprocessing preferable for CPU-bound work given the GIL?",
+                Set.of("python", "concurrency"), false,
+                Set.of("multiprocessing", "multithreading", "CPU-bound", "GIL"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q818",
+                "What are Python's `collections` module tools like `defaultdict` and `Counter` useful for?",
+                Set.of("python"), false,
+                Set.of("defaultdict", "Counter", "collections"), "EASY"));
+
+        q.add(new InterviewQuestion("Q819",
+                "What does `itertools` provide, and when would you use `itertools.chain` or `itertools.groupby`?",
+                Set.of("python"), false,
+                Set.of("itertools", "chain", "groupby", "lazy"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q820",
+                "How does Python's garbage collection work, combining reference counting with a cycle detector?",
+                Set.of("python"), false,
+                Set.of("garbage collection", "reference counting", "cycles"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q821",
+                "What is a Python generator's `.send()` method used for?",
+                Set.of("python"), false,
+                Set.of("generator", "send", "coroutine"), "HARD"));
+
+        q.add(new InterviewQuestion("Q822",
+                "What is the purpose of the `if __name__ == \"__main__\":` guard in a Python script?",
+                Set.of("python"), false,
+                Set.of("__name__", "__main__", "entry point"), "EASY"));
+
+        q.add(new InterviewQuestion("Q823",
+                "How do you structure unit tests with `pytest`? What are fixtures used for?",
+                Set.of("python", "testing"), false,
+                Set.of("pytest", "fixture", "assert", "test discovery"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q824",
+                "What is the difference between a shallow copy and a deep copy in Python?",
+                Set.of("python"), false,
+                Set.of("shallow copy", "deep copy", "copy module"), "EASY"));
+
+        q.add(new InterviewQuestion("Q825",
+                "How would you profile a slow Python function to find the bottleneck?",
+                Set.of("python", "performance"), false,
+                Set.of("profiling", "cProfile", "bottleneck"), "MEDIUM"));
+    }
+
+    // =====================================================================
+    // ETL / Data pipelines  (Q826-Q850)
+    // =====================================================================
+    private void addEtlDataPipelines(List<InterviewQuestion> q) {
+        q.add(new InterviewQuestion("Q826",
+                "What is the difference between ETL and ELT? When would you prefer one over the other?",
+                Set.of("etl"), false,
+                Set.of("ETL", "ELT", "transform", "load"), "EASY"));
+
+        q.add(new InterviewQuestion("Q827",
+                "What is an idempotent data pipeline, and why does idempotency matter for ETL jobs?",
+                Set.of("etl"), false,
+                Set.of("idempotent", "retry", "duplicate"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q828",
+                "What is the difference between a full load and an incremental load in a data pipeline?",
+                Set.of("etl"), false,
+                Set.of("full load", "incremental load", "watermark", "delta"), "EASY"));
+
+        q.add(new InterviewQuestion("Q829",
+                "What is a watermark (or high-water mark) in incremental data extraction?",
+                Set.of("etl"), false,
+                Set.of("watermark", "high-water mark", "timestamp"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q830",
+                "What data quality checks would you add to a pipeline (nulls, duplicates, schema drift)?",
+                Set.of("etl"), false,
+                Set.of("data quality", "validation", "nulls", "schema drift"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q831",
+                "What is schema evolution, and how would you handle a source system adding or removing a column?",
+                Set.of("etl"), false,
+                Set.of("schema evolution", "backward compatible", "column"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q832",
+                "What is the difference between batch processing and stream processing?",
+                Set.of("etl"), false,
+                Set.of("batch", "streaming", "latency", "throughput"), "EASY"));
+
+        q.add(new InterviewQuestion("Q833",
+                "What is a dead-letter queue, and why would a data pipeline use one?",
+                Set.of("etl"), false,
+                Set.of("dead-letter queue", "failed records", "reprocessing"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q834",
+                "How would you design a pipeline to safely backfill historical data without duplicating already-loaded records?",
+                Set.of("etl"), false,
+                Set.of("backfill", "deduplication", "idempotent"), "HARD"));
+
+        q.add(new InterviewQuestion("Q835",
+                "What is a slowly changing dimension (SCD), and what's the difference between Type 1 and Type 2?",
+                Set.of("etl", "data warehousing"), false,
+                Set.of("slowly changing dimension", "SCD", "Type 1", "Type 2"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q836",
+                "What is data lineage, and why is it important in a data pipeline?",
+                Set.of("etl"), false,
+                Set.of("data lineage", "traceability", "audit"), "EASY"));
+
+        q.add(new InterviewQuestion("Q837",
+                "What is the difference between a data lake and a data warehouse?",
+                Set.of("etl", "data warehousing"), false,
+                Set.of("data lake", "data warehouse", "schema-on-read", "schema-on-write"), "EASY"));
+
+        q.add(new InterviewQuestion("Q838",
+                "How do you handle late-arriving data in a pipeline that partitions by event date?",
+                Set.of("etl"), false,
+                Set.of("late-arriving data", "partition", "event time"), "HARD"));
+
+        q.add(new InterviewQuestion("Q839",
+                "What is exactly-once processing, and why is it hard to guarantee in distributed pipelines?",
+                Set.of("etl"), false,
+                Set.of("exactly-once", "at-least-once", "distributed"), "HARD"));
+
+        q.add(new InterviewQuestion("Q840",
+                "What is a checkpoint in a streaming pipeline, and what does it protect against?",
+                Set.of("etl"), false,
+                Set.of("checkpoint", "streaming", "failure recovery"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q841",
+                "What is partitioning in the storage layer of a data pipeline, and how does it improve query performance?",
+                Set.of("etl", "data warehousing"), false,
+                Set.of("partitioning", "pruning", "performance"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q842",
+                "What is data deduplication, and what strategies would you use to detect duplicate records?",
+                Set.of("etl"), false,
+                Set.of("deduplication", "hash", "primary key"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q843",
+                "What monitoring and alerting would you put on a production ETL pipeline?",
+                Set.of("etl"), false,
+                Set.of("monitoring", "alerting", "SLA", "freshness"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q844",
+                "What is a data contract between a source system and a downstream consumer, and why does it matter?",
+                Set.of("etl"), false,
+                Set.of("data contract", "schema", "breaking change"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q845",
+                "How would you test a data transformation step before deploying it to production?",
+                Set.of("etl", "testing"), false,
+                Set.of("testing", "unit test", "sample data", "validation"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q846",
+                "What is CDC (Change Data Capture), and how is it used to sync data between systems?",
+                Set.of("etl"), false,
+                Set.of("CDC", "change data capture", "replication"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q847",
+                "What is the difference between a fact table and a dimension table in a data warehouse model?",
+                Set.of("etl", "data warehousing"), false,
+                Set.of("fact table", "dimension table", "star schema"), "EASY"));
+
+        q.add(new InterviewQuestion("Q848",
+                "How would you handle a pipeline step that depends on an upstream API with rate limits?",
+                Set.of("etl"), false,
+                Set.of("rate limit", "retry", "backoff", "throttling"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q849",
+                "What is data partition skew, and how can it slow down a distributed processing job?",
+                Set.of("etl"), false,
+                Set.of("skew", "distributed processing", "bottleneck"), "HARD"));
+
+        q.add(new InterviewQuestion("Q850",
+                "What questions would you ask before designing a new data pipeline (source, volume, freshness, consumers)?",
+                Set.of("etl"), false,
+                Set.of("requirements", "freshness", "volume", "consumers"), "EASY"));
+    }
+
+    // =====================================================================
+    // Airflow  (Q851-Q870)
+    // =====================================================================
+    private void addAirflow(List<InterviewQuestion> q) {
+        q.add(new InterviewQuestion("Q851",
+                "What is a DAG in Apache Airflow?",
+                Set.of("airflow"), false,
+                Set.of("DAG", "directed acyclic graph", "tasks"), "EASY"));
+
+        q.add(new InterviewQuestion("Q852",
+                "What is the difference between an Airflow Operator and a Sensor?",
+                Set.of("airflow"), false,
+                Set.of("operator", "sensor", "poke"), "EASY"));
+
+        q.add(new InterviewQuestion("Q853",
+                "What is an Airflow XCom, and what is it typically used for?",
+                Set.of("airflow"), false,
+                Set.of("XCom", "cross-communication", "task"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q854",
+                "What is the difference between Airflow's `schedule_interval` and a DAG run's `execution_date`?",
+                Set.of("airflow"), false,
+                Set.of("schedule_interval", "start_date", "execution_date"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q855",
+                "What does Airflow's \"backfill\" mean, and when would you use it?",
+                Set.of("airflow"), false,
+                Set.of("backfill", "catchup", "historical runs"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q856",
+                "What is an Airflow Executor, and what's the difference between the LocalExecutor and CeleryExecutor?",
+                Set.of("airflow"), false,
+                Set.of("executor", "LocalExecutor", "CeleryExecutor", "parallelism"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q857",
+                "How does Airflow handle task retries, and what parameters control retry behavior?",
+                Set.of("airflow"), false,
+                Set.of("retries", "retry_delay", "backoff"), "EASY"));
+
+        q.add(new InterviewQuestion("Q858",
+                "How do you set a task dependency in Airflow using `>>` or `set_downstream`?",
+                Set.of("airflow"), false,
+                Set.of("dependency", "upstream", "downstream"), "EASY"));
+
+        q.add(new InterviewQuestion("Q859",
+                "What is the Airflow scheduler, and how does it decide when to trigger a DAG run?",
+                Set.of("airflow"), false,
+                Set.of("scheduler", "DAG run", "trigger"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q860",
+                "What is an Airflow Hook, and how does it differ from an Operator?",
+                Set.of("airflow"), false,
+                Set.of("hook", "connection", "operator"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q861",
+                "Why should you avoid putting large amounts of data into an Airflow XCom, and what would you do instead?",
+                Set.of("airflow"), false,
+                Set.of("XCom", "large data", "external storage"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q862",
+                "What is a TaskGroup (or SubDAG) in Airflow, and why might you use one?",
+                Set.of("airflow"), false,
+                Set.of("SubDAG", "TaskGroup", "modularity"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q863",
+                "What is the purpose of Airflow's `catchup` parameter?",
+                Set.of("airflow"), false,
+                Set.of("catchup", "scheduler", "missed runs"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q864",
+                "How does Airflow's task concurrency and pool mechanism prevent overloading a downstream system?",
+                Set.of("airflow"), false,
+                Set.of("pool", "concurrency", "throttling"), "HARD"));
+
+        q.add(new InterviewQuestion("Q865",
+                "Why does idempotency matter for an Airflow task that might be retried or re-run?",
+                Set.of("airflow", "etl"), false,
+                Set.of("idempotent", "retry", "side effect"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q866",
+                "What is the difference between Airflow's classic operators and the TaskFlow API (`@task` decorator) in Airflow 2.x?",
+                Set.of("airflow", "python"), false,
+                Set.of("TaskFlow API", "@task", "Airflow 2"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q867",
+                "How would you configure an Airflow task to alert on failure, e.g. via Slack or email?",
+                Set.of("airflow"), false,
+                Set.of("on_failure_callback", "alerting", "notification"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q868",
+                "What is the difference between a Sensor's `poke` mode and `reschedule` mode in Airflow?",
+                Set.of("airflow"), false,
+                Set.of("poke", "reschedule", "worker slot"), "HARD"));
+
+        q.add(new InterviewQuestion("Q869",
+                "How would you structure an Airflow DAG to process multiple similar datasets without duplicating code?",
+                Set.of("airflow"), false,
+                Set.of("dynamic DAG", "loop", "parameterization"), "HARD"));
+
+        q.add(new InterviewQuestion("Q870",
+                "What is Airflow's metadata database used for?",
+                Set.of("airflow"), false,
+                Set.of("metadata database", "DAG state", "task instance"), "EASY"));
+    }
+
+    // =====================================================================
+    // dbt  (Q871-Q890)
+    // =====================================================================
+    private void addDbt(List<InterviewQuestion> q) {
+        q.add(new InterviewQuestion("Q871",
+                "What is a dbt model?",
+                Set.of("dbt"), false,
+                Set.of("model", "SQL", "SELECT", "compiled"), "EASY"));
+
+        q.add(new InterviewQuestion("Q872",
+                "What is the difference between dbt's `view`, `table`, and `incremental` materializations?",
+                Set.of("dbt"), false,
+                Set.of("materialization", "view", "table", "incremental"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q873",
+                "What is a dbt test, and what do the built-in generic tests like `unique` and `not_null` check?",
+                Set.of("dbt"), false,
+                Set.of("test", "unique", "not_null"), "EASY"));
+
+        q.add(new InterviewQuestion("Q874",
+                "What is a dbt macro, and when would you write one?",
+                Set.of("dbt"), false,
+                Set.of("macro", "Jinja", "reusable"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q875",
+                "What is the difference between a dbt `source` and a `ref`?",
+                Set.of("dbt"), false,
+                Set.of("source", "ref", "lineage"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q876",
+                "What is the difference between `dbt run`, `dbt test`, and `dbt build`?",
+                Set.of("dbt"), false,
+                Set.of("dbt run", "dbt test", "dbt build"), "EASY"));
+
+        q.add(new InterviewQuestion("Q877",
+                "What is a dbt seed, and when would you use one?",
+                Set.of("dbt"), false,
+                Set.of("seed", "CSV", "static data"), "EASY"));
+
+        q.add(new InterviewQuestion("Q878",
+                "How does dbt's incremental materialization decide which rows to insert or update?",
+                Set.of("dbt"), false,
+                Set.of("incremental", "is_incremental", "unique_key"), "HARD"));
+
+        q.add(new InterviewQuestion("Q879",
+                "What is dbt's model dependency graph (DAG), and how is it built from `ref()` calls?",
+                Set.of("dbt"), false,
+                Set.of("DAG", "ref", "lineage", "dependency"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q880",
+                "What is a dbt snapshot, and what problem does it solve?",
+                Set.of("dbt"), false,
+                Set.of("snapshot", "SCD Type 2", "history"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q881",
+                "What are dbt packages, and why would you install one like `dbt_utils`?",
+                Set.of("dbt"), false,
+                Set.of("package", "dbt_utils", "reusable"), "EASY"));
+
+        q.add(new InterviewQuestion("Q882",
+                "What is the purpose of `dbt docs generate`?",
+                Set.of("dbt"), false,
+                Set.of("docs", "documentation", "lineage graph"), "EASY"));
+
+        q.add(new InterviewQuestion("Q883",
+                "What is a dbt exposure, and why is it useful for downstream consumers of a model?",
+                Set.of("dbt"), false,
+                Set.of("exposure", "downstream", "dashboard"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q884",
+                "How would you organize dbt models into staging, intermediate, and marts layers?",
+                Set.of("dbt"), false,
+                Set.of("staging", "intermediate", "marts", "layering"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q885",
+                "What is Jinja templating's role in a dbt project?",
+                Set.of("dbt"), false,
+                Set.of("Jinja", "templating"), "EASY"));
+
+        q.add(new InterviewQuestion("Q886",
+                "What is a dbt `config` block used for at the top of a model?",
+                Set.of("dbt"), false,
+                Set.of("config", "materialized", "tags"), "EASY"));
+
+        q.add(new InterviewQuestion("Q887",
+                "How would you debug a dbt model that's producing unexpected duplicate rows?",
+                Set.of("dbt"), false,
+                Set.of("duplicate", "unique test", "debugging"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q888",
+                "What is the difference between dbt Core and dbt Cloud?",
+                Set.of("dbt"), false,
+                Set.of("dbt Core", "dbt Cloud", "scheduler"), "EASY"));
+
+        q.add(new InterviewQuestion("Q889",
+                "What is a custom (singular) dbt test, and how does it differ from a generic test?",
+                Set.of("dbt"), false,
+                Set.of("singular test", "custom SQL", "generic test"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q890",
+                "How would you handle a slowly changing source schema in dbt without breaking downstream models?",
+                Set.of("dbt"), false,
+                Set.of("schema change", "source", "downstream"), "HARD"));
+    }
+
+    // =====================================================================
+    // Data Warehousing / Data Analytics  (Q891-Q910)
+    // =====================================================================
+    private void addDataWarehousingAnalytics(List<InterviewQuestion> q) {
+        q.add(new InterviewQuestion("Q891",
+                "What is the difference between a star schema and a snowflake schema in data warehouse design?",
+                Set.of("data warehousing"), false,
+                Set.of("star schema", "snowflake schema", "normalization"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q892",
+                "What is table partitioning in a cloud data warehouse like BigQuery or Snowflake, and how does it reduce query cost and time?",
+                Set.of("data warehousing"), false,
+                Set.of("partitioning", "pruning", "cost"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q893",
+                "What is clustering (or micro-partitioning) in Snowflake, and how does it differ from partitioning?",
+                Set.of("data warehousing"), false,
+                Set.of("clustering", "micro-partition"), "HARD"));
+
+        q.add(new InterviewQuestion("Q894",
+                "What is the difference between a materialized view and a regular view in a data warehouse?",
+                Set.of("data warehousing"), false,
+                Set.of("materialized view", "refresh", "precomputed"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q895",
+                "What is BigQuery's separation of storage and compute, and why does it matter for cost and performance?",
+                Set.of("data warehousing"), false,
+                Set.of("storage", "compute", "separation"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q896",
+                "What is a surrogate key, and why is it preferred over a natural key in a dimension table?",
+                Set.of("data warehousing"), false,
+                Set.of("surrogate key", "natural key", "dimension"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q897",
+                "What is Redshift's distribution style (KEY, ALL, EVEN), and how does it affect query performance?",
+                Set.of("data warehousing"), false,
+                Set.of("distribution style", "KEY", "EVEN"), "HARD"));
+
+        q.add(new InterviewQuestion("Q898",
+                "What is a data mart, and how does it differ from an enterprise data warehouse?",
+                Set.of("data warehousing"), false,
+                Set.of("data mart", "subset", "department"), "EASY"));
+
+        q.add(new InterviewQuestion("Q899",
+                "What query cost optimizations would you apply in a pay-per-query warehouse, like avoiding `SELECT *` or scanning less data?",
+                Set.of("data warehousing"), false,
+                Set.of("cost optimization", "SELECT", "bytes scanned"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q900",
+                "What is the difference between row-based and columnar storage, and why do data warehouses use columnar formats?",
+                Set.of("data warehousing"), false,
+                Set.of("columnar", "row-based", "compression"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q901",
+                "What is A/B testing, and what statistical concept determines whether a result is significant?",
+                Set.of("data analytics"), false,
+                Set.of("A/B testing", "significance", "p-value"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q902",
+                "What is the difference between correlation and causation, and why does it matter when analyzing data?",
+                Set.of("data analytics"), false,
+                Set.of("correlation", "causation", "confounding"), "EASY"));
+
+        q.add(new InterviewQuestion("Q903",
+                "What is a p-value, and what does a p-value of 0.05 actually mean?",
+                Set.of("data analytics"), false,
+                Set.of("p-value", "hypothesis testing", "significance level"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q904",
+                "What is the difference between mean, median, and mode, and when would you prefer one over another for summarizing data?",
+                Set.of("data analytics"), false,
+                Set.of("mean", "median", "mode", "outliers"), "EASY"));
+
+        q.add(new InterviewQuestion("Q905",
+                "What is a confidence interval, and how would you explain one to a non-technical stakeholder?",
+                Set.of("data analytics"), false,
+                Set.of("confidence interval", "uncertainty", "estimate"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q906",
+                "What is an outlier, and how would you detect one in a dataset before analysis?",
+                Set.of("data analytics"), false,
+                Set.of("outlier", "skew", "distribution"), "EASY"));
+
+        q.add(new InterviewQuestion("Q907",
+                "What is the difference between a KPI and a metric, and how would you choose a good north-star metric?",
+                Set.of("data analytics"), false,
+                Set.of("KPI", "metric", "north-star"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q908",
+                "How would you use a pivot table, or `pandas.pivot_table`, to summarize a large dataset?",
+                Set.of("data analytics", "python"), false,
+                Set.of("pivot table", "groupby", "aggregation"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q909",
+                "What is Simpson's Paradox, and why is it a risk when aggregating data across groups?",
+                Set.of("data analytics"), false,
+                Set.of("Simpson's paradox", "aggregation", "subgroup"), "HARD"));
+
+        q.add(new InterviewQuestion("Q910",
+                "What is the difference between a dashboard (e.g. Tableau or Power BI) and an ad-hoc analysis, and when would you build each?",
+                Set.of("data analytics"), false,
+                Set.of("dashboard", "ad-hoc", "reporting"), "EASY"));
     }
 }

@@ -13,6 +13,7 @@ public class AiFeedbackRequest {
     private List<String> criticalFailures;
     private Map<String, Integer> skillGraph;
     private List<FeedbackAttemptDto> attempts;
+    private String roleHint;
 
     public int getOverallScore() { return overallScore; }
     public void setOverallScore(int overallScore) { this.overallScore = overallScore; }
@@ -37,4 +38,7 @@ public class AiFeedbackRequest {
 
     public List<FeedbackAttemptDto> getAttempts() { return attempts; }
     public void setAttempts(List<FeedbackAttemptDto> attempts) { this.attempts = attempts; }
+
+    public String getRoleHint() { return roleHint; }
+    public void setRoleHint(String roleHint) { this.roleHint = roleHint; }
 }

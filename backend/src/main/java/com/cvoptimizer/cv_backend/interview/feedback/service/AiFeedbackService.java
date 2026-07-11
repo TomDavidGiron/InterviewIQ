@@ -68,7 +68,7 @@ public class AiFeedbackService {
         }
         payload.put("max_output_tokens", Math.max(500, properties.getMaxOutputTokens()));
         payload.put("input", List.of(
-                Map.of("role", "developer", "content", buildDeveloperPrompt()),
+                Map.of("role", "developer", "content", buildDeveloperPrompt(resolveRole(request))),
                 Map.of("role", "user", "content", buildUserPrompt(request))
         ));
         payload.put("text", Map.of(
@@ -115,15 +115,22 @@ public class AiFeedbackService {
         return null;
     }
 
-    private String buildDeveloperPrompt() {
+    private String resolveRole(AiFeedbackRequest request) {
+        if (request == null || request.getRoleHint() == null || request.getRoleHint().isBlank()) {
+            return "backend";
+        }
+        return request.getRoleHint().trim();
+    }
+
+    private String buildDeveloperPrompt(String role) {
         return """
-                You are an expert backend interview coach.
+                You are an expert %s interview coach.
                 Return only valid JSON.
                 Analyze the interview summary and produce concise, useful feedback.
                 Keep strengths and weaknesses short and concrete.
                 Prefer skill names or concepts, not long sentences.
                 The studyPlan should be a short multi-line plan with 3 numbered steps.
-                """;
+                """.formatted(role);
     }
 
     private String buildUserPrompt(AiFeedbackRequest request) throws JsonProcessingException {
@@ -168,13 +175,15 @@ public class AiFeedbackService {
         boolean strong = score >= 85;
         boolean okay = score >= 70;
 
+        String role = resolveRole(request);
+
         String diagnosis;
         if (strong) {
-            diagnosis = "Candidate shows strong backend fundamentals and is close to interview-ready.";
+            diagnosis = "Candidate shows strong " + role + " fundamentals and is close to interview-ready.";
         } else if (okay) {
-            diagnosis = "Candidate shows solid fundamentals but still has noticeable gaps in weaker backend areas.";
+            diagnosis = "Candidate shows solid fundamentals but still has noticeable gaps in weaker " + role + " areas.";
         } else {
-            diagnosis = "Candidate needs more practice before a backend interview, especially in weaker concepts and answer depth.";
+            diagnosis = "Candidate needs more practice before a " + role + " interview, especially in weaker concepts and answer depth.";
         }
 
         String summary;
@@ -183,10 +192,10 @@ public class AiFeedbackService {
         } else if (!strengths.isEmpty()) {
             summary = "Good progress. Strongest areas so far: " + String.join(", ", strengths);
         } else {
-            summary = "Interview completed. Keep practicing structured backend answers with concrete examples.";
+            summary = "Interview completed. Keep practicing structured " + role + " answers with concrete examples.";
         }
 
-        String studyPlan = buildStudyPlan(strengths, weaknesses);
+        String studyPlan = buildStudyPlan(strengths, weaknesses, role);
 
         response.setDiagnosis(diagnosis);
         response.setStrengths(strengths);
@@ -196,7 +205,7 @@ public class AiFeedbackService {
         return normalize(response, request);
     }
 
-    private String buildStudyPlan(List<String> strengths, List<String> weaknesses) {
+    private String buildStudyPlan(List<String> strengths, List<String> weaknesses, String role) {
         List<String> focus = !weaknesses.isEmpty() ? weaknesses : strengths;
         List<String> top = focus.stream().limit(3).toList();
 
@@ -206,9 +215,9 @@ public class AiFeedbackService {
 
         return """
                 1. %s
-                2. Practice 5–10 interview questions and answer them aloud with one concrete backend example each
+                2. Practice 5–10 interview questions and answer them aloud with one concrete %s example each
                 3. Re-run the interview and check whether the same weak areas still repeat
-                """.formatted(first);
+                """.formatted(first, role);
     }
 
     private List<String> inferStrengthsFromAttempts(List<FeedbackAttemptDto> attempts) {
@@ -299,17 +308,19 @@ public class AiFeedbackService {
             response = new AiFeedbackResponse();
         }
 
+        String role = resolveRole(request);
+
         if (response.getDiagnosis() == null || response.getDiagnosis().isBlank()) {
-            response.setDiagnosis("Interview completed. Review the weak areas and practice more backend examples.");
+            response.setDiagnosis("Interview completed. Review the weak areas and practice more " + role + " examples.");
         }
         response.setStrengths(firstNonEmpty(response.getStrengths(), request.getStrengths()));
         response.setWeaknesses(firstNonEmpty(response.getWeaknesses(), request.getWeaknesses(), request.getWeakTopics()));
 
         if (response.getStudyPlan() == null || response.getStudyPlan().isBlank()) {
-            response.setStudyPlan(buildStudyPlan(response.getStrengths(), response.getWeaknesses()));
+            response.setStudyPlan(buildStudyPlan(response.getStrengths(), response.getWeaknesses(), role));
         }
         if (response.getFeedbackSummary() == null || response.getFeedbackSummary().isBlank()) {
-            response.setFeedbackSummary("Interview completed. Review weak topics and keep practicing structured backend answers.");
+            response.setFeedbackSummary("Interview completed. Review weak topics and keep practicing structured " + role + " answers.");
         }
 
         response.setStrengths(cleanList(response.getStrengths()));

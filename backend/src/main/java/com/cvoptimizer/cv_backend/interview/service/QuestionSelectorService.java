@@ -18,7 +18,7 @@ public class QuestionSelectorService {
             return List.of();
         }
 
-        Set<String> safeSkills = (jobSkills == null) ? Set.of() : jobSkills;
+        Set<String> safeSkills = normalizeSkills(jobSkills);
 
         List<InterviewQuestion> shuffled = new ArrayList<>(bank);
         Collections.shuffle(shuffled);
@@ -43,8 +43,8 @@ public class QuestionSelectorService {
         for (InterviewQuestion q : result) {
             if (q.getTags() != null) {
                 for (String tag : q.getTags()) {
-                    if (safeSkills.contains(tag)) {
-                        coveredSkills.add(tag);
+                    if (tag != null && safeSkills.contains(tag.toLowerCase())) {
+                        coveredSkills.add(tag.toLowerCase());
                     }
                 }
             }
@@ -57,7 +57,8 @@ public class QuestionSelectorService {
             }
 
             InterviewQuestion bestForSkill = ranked.stream()
-                    .filter(q -> q.getTags() != null && q.getTags().contains(skill))
+                    .filter(q -> q.getTags() != null && q.getTags().stream()
+                            .anyMatch(t -> t != null && t.equalsIgnoreCase(skill)))
                     .filter(q -> !addedKeys.contains(uniqueKey(q)))
                     .findFirst()
                     .orElse(null);
@@ -92,7 +93,7 @@ public class QuestionSelectorService {
 
         if (q.getTags() != null && jobSkills != null) {
             for (String tag : q.getTags()) {
-                if (jobSkills.contains(tag)) {
+                if (tag != null && jobSkills.contains(tag.toLowerCase())) {
                     score += 5;
                 }
             }
@@ -127,6 +128,19 @@ public class QuestionSelectorService {
         if (addedKeys.add(key)) {
             result.add(q);
         }
+    }
+
+    private Set<String> normalizeSkills(Set<String> skills) {
+        if (skills == null) {
+            return Set.of();
+        }
+        Set<String> normalized = new LinkedHashSet<>();
+        for (String skill : skills) {
+            if (skill != null && !skill.isBlank()) {
+                normalized.add(skill.trim().toLowerCase());
+            }
+        }
+        return normalized;
     }
 
     private String uniqueKey(InterviewQuestion q) {
