@@ -14,11 +14,12 @@ RUN mvn dependency:copy-dependencies -DoutputDirectory=target/dependency -Dinclu
 FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 
-# Tesseract for OCR (optional, app works without it) and Chromium for
-# SeleniumScraper — Selenium needs a real system browser binary, distinct
-# from Playwright's own bundled Chromium installed below.
+# Tesseract for OCR (optional, app works without it). Ubuntu jammy retired the
+# `chromium` apt package (transitional stub -> snap, unusable in a container),
+# so SeleniumScraper no longer gets a system browser here — it fails its
+# ChromeDriver init gracefully and the router falls through to other scrapers.
 RUN apt-get update \
- && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng chromium \
+ && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng \
  && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /app/target/*.jar app.jar
