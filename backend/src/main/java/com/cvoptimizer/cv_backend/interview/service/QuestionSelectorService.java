@@ -35,9 +35,10 @@ public class QuestionSelectorService {
         Set<String> addedKeys = new HashSet<>();
         Set<String> coveredSkills = new HashSet<>();
 
-        // 1) ensure diversity by type
-        addIfNotExists(result, addedKeys, pickFirstByType(ranked, QuestionType.MCQ));
-        addIfNotExists(result, addedKeys, pickFirstByType(ranked, QuestionType.CODE));
+        // 1) ensure diversity by type — but prefer a skill-matching question of that type
+        // over a random one, so type diversity never overrides relevance to the job.
+        addIfNotExists(result, addedKeys, pickFirstByType(ranked, QuestionType.MCQ, safeSkills));
+        addIfNotExists(result, addedKeys, pickFirstByType(ranked, QuestionType.CODE, safeSkills));
 
         // update covered skills after forced additions
         for (InterviewQuestion q : result) {
@@ -110,7 +111,21 @@ public class QuestionSelectorService {
         return score;
     }
 
-    private InterviewQuestion pickFirstByType(List<InterviewQuestion> list, QuestionType type) {
+    private InterviewQuestion pickFirstByType(List<InterviewQuestion> list, QuestionType type, Set<String> jobSkills) {
+        if (jobSkills != null && !jobSkills.isEmpty()) {
+            InterviewQuestion matched = list.stream()
+                    .filter(q -> q != null && q.getType() == type)
+                    .filter(q -> q.getTags() != null && q.getTags().stream()
+                            .anyMatch(t -> t != null && jobSkills.contains(t.toLowerCase())))
+                    .findFirst()
+                    .orElse(null);
+            if (matched != null) {
+                return matched;
+            }
+        }
+
+        // No skill-matching question of this type exists — fall back to the top-ranked one
+        // of that type so we still get format diversity, just without a relevance guarantee.
         return list.stream()
                 .filter(q -> q != null && q.getType() == type)
                 .findFirst()

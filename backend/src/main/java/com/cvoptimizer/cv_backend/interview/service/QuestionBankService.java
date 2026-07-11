@@ -2322,7 +2322,7 @@ public class QuestionBankService {
 
         // =========================
         // CODE (Phase C) - EXTENDED
-        // Target total CODE = 50 (existing 1 + add 49 below)
+        // Target total CODE = 57 (existing 1 + 49 backend + 7 frontend/React/JS)
         // =========================
 
         // Format:
@@ -2504,7 +2504,30 @@ public class QuestionBankService {
                         Set.of("logs","metrics","db")},
                 {"CODE50", "Write a minimal JSON example of a JWT header+payload (no signature).", Set.of("security","api"), false,
                         "",
-                        Set.of("alg","typ","sub")}
+                        Set.of("alg","typ","sub")},
+
+                // --- Frontend / React / JavaScript ---
+                {"CODE51", "Write a React functional component with useState that renders a counter with increment/decrement buttons.", Set.of("react","javascript"), false,
+                        "",
+                        Set.of("usestate","onclick","return")},
+                {"CODE52", "Write a React useEffect hook that fetches data from an API on component mount and stores it in state.", Set.of("react","javascript"), false,
+                        "",
+                        Set.of("useeffect","fetch","usestate")},
+                {"CODE53", "Write a JavaScript function that debounces another function by a given delay in milliseconds.", Set.of("javascript"), false,
+                        "",
+                        Set.of("settimeout","cleartimeout","delay")},
+                {"CODE54", "Write an async JavaScript function that fetches JSON from a URL, handling errors with try/catch.", Set.of("javascript","api"), false,
+                        "",
+                        Set.of("async","await","try","catch")},
+                {"CODE55", "Write a custom React hook useLocalStorage(key, initialValue) that syncs state with localStorage.", Set.of("react","javascript"), false,
+                        "",
+                        Set.of("usestate","localstorage","useeffect")},
+                {"CODE56", "Write a JavaScript function that flattens a nested array of arbitrary depth.", Set.of("javascript"), false,
+                        "",
+                        Set.of("flat","recursion","array")},
+                {"CODE57", "Write a React component that renders a list of items, each with a unique key prop, and conditionally shows an empty-state message.", Set.of("react","javascript"), false,
+                        "",
+                        Set.of("map","key","return")}
         };
 
         for (Object[] row : code) {

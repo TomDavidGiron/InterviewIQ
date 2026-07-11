@@ -9,8 +9,9 @@ import java.util.Set;
 
 /**
  * Questions across frontend, CS fundamentals, behavioral, cloud/DevOps,
- * web security, testing, and (Q801+) Python/data engineering/data analytics.
- * IDs Q501-Q910. No overlap with QuestionBankService.
+ * web security, testing, (Q801+) Python/data engineering/data analytics,
+ * and (Q911+) Agile process/tooling (Scrum, Kanban, SAFe, Jira).
+ * IDs Q501-Q924. No overlap with QuestionBankService.
  */
 @Component
 public class QuestionBankExpansion {
@@ -35,6 +36,7 @@ public class QuestionBankExpansion {
         addAirflow(q);
         addDbt(q);
         addDataWarehousingAnalytics(q);
+        addAgileProcess(q);
         return q;
     }
 
@@ -2136,5 +2138,80 @@ public class QuestionBankExpansion {
                 "What is the difference between a dashboard (e.g. Tableau or Power BI) and an ad-hoc analysis, and when would you build each?",
                 Set.of("data analytics"), false,
                 Set.of("dashboard", "ad-hoc", "reporting"), "EASY"));
+    }
+
+    // =====================================================================
+    // Agile Process / Tooling (Scrum, Kanban, SAFe, Jira)  (Q911-Q924)
+    // =====================================================================
+    private void addAgileProcess(List<InterviewQuestion> q) {
+        q.add(new InterviewQuestion("Q911",
+                "What is a Scrum sprint, and what are its typical ceremonies (planning, daily standup, review, retrospective)?",
+                Set.of("scrum", "agile"), false,
+                Set.of("sprint", "standup", "retrospective"), "EASY"));
+
+        q.add(new InterviewQuestion("Q912",
+                "What is the role of a Scrum Master, and how does it differ from a project manager?",
+                Set.of("scrum", "agile"), false,
+                Set.of("scrum master", "facilitator", "servant leader"), "EASY"));
+
+        q.add(new InterviewQuestion("Q913",
+                "What is a product backlog, and how does it differ from a sprint backlog?",
+                Set.of("scrum", "agile"), false,
+                Set.of("product backlog", "sprint backlog", "prioritization"), "EASY"));
+
+        q.add(new InterviewQuestion("Q914",
+                "What is velocity in Scrum, and how is it used to plan future sprints?",
+                Set.of("scrum", "agile"), false,
+                Set.of("velocity", "story points", "estimation"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q915",
+                "What is a Kanban board, and what do its columns typically represent?",
+                Set.of("kanban", "agile"), false,
+                Set.of("kanban board", "WIP", "workflow"), "EASY"));
+
+        q.add(new InterviewQuestion("Q916",
+                "What is a WIP (work-in-progress) limit in Kanban, and why is it used?",
+                Set.of("kanban", "agile"), false,
+                Set.of("WIP limit", "bottleneck", "flow"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q917",
+                "What is the key difference between Kanban and Scrum?",
+                Set.of("kanban", "scrum", "agile"), false,
+                Set.of("continuous flow", "sprints", "iteration"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q918",
+                "What is SAFe (Scaled Agile Framework), and what problem does it try to solve?",
+                Set.of("safe", "agile"), false,
+                Set.of("scaled agile", "program increment", "alignment"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q919",
+                "What is a Program Increment (PI) in SAFe, and how does PI Planning work?",
+                Set.of("safe", "agile"), false,
+                Set.of("program increment", "PI planning", "ART"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q920",
+                "What is an Agile Release Train (ART) in SAFe?",
+                Set.of("safe", "agile"), false,
+                Set.of("agile release train", "teams", "cadence"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q921",
+                "What is the difference between an epic, a story, and a task in Jira?",
+                Set.of("jira", "agile"), false,
+                Set.of("epic", "story", "task"), "EASY"));
+
+        q.add(new InterviewQuestion("Q922",
+                "How would you use a Jira board to track sprint progress across a team?",
+                Set.of("jira", "scrum"), false,
+                Set.of("board", "swimlane", "status"), "EASY"));
+
+        q.add(new InterviewQuestion("Q923",
+                "What is a Jira workflow, and how would you customize one for your team's process?",
+                Set.of("jira", "agile"), false,
+                Set.of("workflow", "transition", "status"), "MEDIUM"));
+
+        q.add(new InterviewQuestion("Q924",
+                "How would you use Jira's reporting (burndown chart, velocity chart) to identify a team that's falling behind on a sprint?",
+                Set.of("jira", "scrum"), false,
+                Set.of("burndown", "velocity chart", "reporting"), "MEDIUM"));
     }
 }
