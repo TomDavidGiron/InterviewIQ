@@ -14,9 +14,11 @@ RUN mvn dependency:copy-dependencies -DoutputDirectory=target/dependency -Dinclu
 FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 
-# Tesseract for OCR — optional, app works without it
+# Tesseract for OCR (optional, app works without it) and Chromium for
+# SeleniumScraper — Selenium needs a real system browser binary, distinct
+# from Playwright's own bundled Chromium installed below.
 RUN apt-get update \
- && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng \
+ && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng chromium \
  && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /app/target/*.jar app.jar

@@ -15,9 +15,17 @@ public class SeleniumScraper {
     public static ScraperResult scrape(String url) {
         WebDriverManager.chromedriver().setup();
         ChromeOptions options = new ChromeOptions();
+        options.setBinary("/usr/bin/chromium");
         options.addArguments("--headless", "--no-sandbox", "--disable-dev-shm-usage");
 
-        WebDriver driver = new ChromeDriver(options);
+        WebDriver driver;
+        try {
+            driver = new ChromeDriver(options);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ScraperResult("Selenium Scraper Failed", "N/A", "N/A", "Error: " + e.getMessage(), List.of());
+        }
+
         try {
             driver.get(url);
 
