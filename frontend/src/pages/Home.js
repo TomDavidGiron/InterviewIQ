@@ -57,6 +57,12 @@ export default function Home() {
 
   const topTopics = useMemo(() => topics.slice(0, 16), [topics]);
 
+  const isBlockedJobSite = useMemo(() => {
+    const url = jobUrl.trim().toLowerCase();
+    if (!url) return false;
+    return url.includes("linkedin.com") || url.includes("indeed.com");
+  }, [jobUrl]);
+
   const handleExtractTextFromImage = async () => {
     if (!jobImage) return;
     setOcrLoading(true);
@@ -131,6 +137,23 @@ export default function Home() {
             onChange={e => setJobUrl(e.target.value)}
             sx={{ mt: 1.5, mb: 1 }}
           />
+
+          {isBlockedJobSite && (
+            <Typography variant="caption" sx={{ display: "block", color: "#f59e0b", mb: 1 }}>
+              LinkedIn and Indeed block automated scraping, this link probably won&apos;t work.
+              Use{" "}
+              <Link component="button" type="button" onClick={() => setShowOcr(true)}
+                sx={{ color: "#f59e0b", fontWeight: 700 }}>
+                a screenshot (OCR)
+              </Link>
+              {" "}or{" "}
+              <Link component="button" type="button" onClick={() => setShowText(true)}
+                sx={{ color: "#f59e0b", fontWeight: 700 }}>
+                paste the text
+              </Link>
+              {" "}instead.
+            </Typography>
+          )}
 
           <Box sx={{ display: "flex", gap: 1.5 }}>
             <Button size="small" variant="text" sx={{ color: "text.secondary", fontSize: "0.78rem" }}

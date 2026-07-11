@@ -16,8 +16,8 @@ A backend-focused AI-powered technical interview simulator. Generates adaptive i
 - **AI feedback & study plan** - end-of-session diagnosis with a prioritised 3-step study plan
 - **Job-specific interviews** - paste a job URL, description text, or screenshot; skills are extracted and questions are tailored to the role
 - **OCR** - extract job descriptions from screenshots using Tesseract
-- **Multi-strategy scraping** - Jsoup → Playwright → Selenium fallback chain for job posting URLs
-- **800 questions** - backend, Java, algorithms, frontend, cloud, security, behavioural, and more; each tagged EASY / MEDIUM / HARD
+- **Universal job scraping** - reads schema.org JobPosting structured data first (covers most modern ATS platforms — Greenhouse, Lever, Workday, SmartRecruiters, and most corporate careers pages — in one pass), falling back to a Jsoup → Playwright → Selenium chain with site-specific scrapers for anything without structured data. LinkedIn and Indeed actively block scraping at the platform level (auth wall / hard HTTP block) — use the OCR or paste-text input instead for those
+- **1,000+ questions** - backend, Java, algorithms, frontend/React, data engineering (Python, ETL, Airflow, dbt), data science/ML, generative AI, cloud/DevOps (Terraform/IaC), agile process (Scrum, Kanban, SAFe, Jira), security, behavioural, and more; each tagged EASY / MEDIUM / HARD
 - **Rate limiting** - 20 requests/minute per IP on answer submission endpoints
 
 ---
@@ -111,7 +111,7 @@ cd backend
 
 The API starts on **http://localhost:8080**.
 
-On first run, the question bank (800 questions) is seeded into the database. Subsequent startups skip the seed automatically.
+On first run, the question bank (1,000+ questions) is seeded into the database. The seeder is incremental — restarting after new questions are added to the source picks up only the new ones, without touching existing rows.
 
 ### 3. Frontend
 
@@ -228,3 +228,4 @@ Tests cover: adaptive agent logic, keyword evaluator, AI evaluation service (moc
 - Sessions survive backend restarts — the full session state is serialised as JSON into the `session_state` column on every answer submission and restored on cache miss.
 - Guest users are identified by a UUID stored in `localStorage` — no login required.
 - AI features degrade gracefully: if `OPENAI_API_KEY` is not set, evaluation falls back to keyword matching and feedback falls back to rule-based diagnosis. The app is fully usable without an API key.
+- Known scraping limitations: **LinkedIn** and **Indeed** actively block automated scraping (auth wall / hard HTTP 403) — use OCR or paste-text for those instead of a URL. **iCIMS** job links formatted for iframe embedding (URLs with `?mobile=false&width=...` params) may resolve to a generic search page instead of the specific listing when opened standalone.
