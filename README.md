@@ -225,7 +225,7 @@ Tests cover: adaptive agent logic, keyword evaluator, AI evaluation service (moc
 
 ## Notes
 
-- Sessions survive backend restarts — the full session state is serialised as JSON into the `session_state` column on every answer submission and restored on cache miss.
-- Guest users are identified by a UUID stored in `localStorage` — no login required.
+- Sessions survive backend restarts - the full session state is serialised as JSON into the `session_state` column on every answer submission and restored on cache miss.
+- Guest users are identified by a UUID stored in `localStorage` - no login required.
 - AI features degrade gracefully: if `OPENAI_API_KEY` is not set, evaluation falls back to keyword matching and feedback falls back to rule-based diagnosis. The app is fully usable without an API key.
-- Known scraping limitations: **LinkedIn** and **Indeed** actively block automated scraping (auth wall / hard HTTP 403) — use OCR or paste-text for those instead of a URL. **iCIMS** job links formatted for iframe embedding (URLs with `?mobile=false&width=...` params) may resolve to a generic search page instead of the specific listing when opened standalone.
+- Known scraping limitations: **LinkedIn** and **Indeed** actively block automated scraping (auth wall / hard HTTP 403) - use OCR or paste-text for those instead of a URL. **iCIMS** job links formatted for iframe embedding (URLs with `?mobile=false&width=...` params) may resolve to a generic search page instead of the specific listing when opened standalone.
