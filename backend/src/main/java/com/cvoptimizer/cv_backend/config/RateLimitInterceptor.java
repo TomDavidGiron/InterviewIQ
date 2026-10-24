@@ -25,13 +25,6 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         String ip = resolveIp(request);
-        // TEMPORARY diagnostic to see how Railway forwards the client IP — remove once the limiter is fixed
-        System.out.println("[RATE_LIMIT_DEBUG] remoteAddr=" + request.getRemoteAddr()
-                + " xff=" + request.getHeader("X-Forwarded-For")
-                + " xRealIp=" + request.getHeader("X-Real-IP")
-                + " forwarded=" + request.getHeader("Forwarded")
-                + " envoyExternal=" + request.getHeader("X-Envoy-External-Address")
-                + " resolvedKey=" + ip);
         if (buckets.size() > MAX_TRACKED_CLIENTS) {
             buckets.clear(); // crude bound on memory; briefly resets everyone's limit
         }
@@ -63,6 +56,13 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         String remoteAddr = request.getRemoteAddr();
         if (!isInternalAddress(remoteAddr)) {
             return remoteAddr;
+        }
+
+        // Railway's edge sets X-Real-IP to the real client and replaces any client-sent forwarding headers.
+        // Its X-Forwarded-For ends with the edge's own public IP, which changes per request, so prefer X-Real-IP.
+        String realIp = request.getHeader("X-Real-IP");
+        if (parseIpLiteral(realIp == null ? null : realIp.trim()) != null) {
+            return realIp.trim();
         }
 
         String forwarded = request.getHeader("X-Forwarded-For");
