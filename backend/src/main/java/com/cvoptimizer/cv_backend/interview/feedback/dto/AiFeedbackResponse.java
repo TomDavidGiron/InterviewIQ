@@ -24,4 +24,10 @@ public class AiFeedbackResponse {
 
     public String getFeedbackSummary() { return feedbackSummary; }
     public void setFeedbackSummary(String feedbackSummary) { this.feedbackSummary = feedbackSummary; }
+
+    // "ai" when OpenAI produced the feedback, "rule" when the rule-based fallback did
+    private String source;
+
+    public String getSource() { return source; }
+    public void setSource(String source) { this.source = source; }
 }

@@ -38,7 +38,7 @@ public class AiFeedbackService {
 
     public AiFeedbackResponse generateFeedback(AiFeedbackRequest request) {
         if (request == null) {
-            return fallbackFeedback(new AiFeedbackRequest());
+            return withSource(fallbackFeedback(new AiFeedbackRequest()), "rule");
         }
 
         if (properties.isConfigured()) {
@@ -46,14 +46,19 @@ public class AiFeedbackService {
                 String rawText = callOpenAi(request);
                 if (rawText != null && !rawText.isBlank()) {
                     AiFeedbackResponse parsed = objectMapper.readValue(rawText, AiFeedbackResponse.class);
-                    return normalize(parsed, request);
+                    return withSource(normalize(parsed, request), "ai");
                 }
             } catch (RestClientException | JsonProcessingException e) {
                 System.err.println("[AI_FEEDBACK] Falling back to rule-based summary. Reason: " + e.getMessage());
             }
         }
 
-        return fallbackFeedback(request);
+        return withSource(fallbackFeedback(request), "rule");
+    }
+
+    private AiFeedbackResponse withSource(AiFeedbackResponse response, String source) {
+        response.setSource(source);
+        return response;
     }
 
     private String callOpenAi(AiFeedbackRequest request) throws JsonProcessingException {

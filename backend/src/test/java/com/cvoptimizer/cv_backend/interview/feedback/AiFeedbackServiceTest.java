@@ -70,6 +70,7 @@ class AiFeedbackServiceTest {
         assertThat(result.getStrengths()).containsExactly("OOP", "concurrency");
         assertThat(result.getWeaknesses()).containsExactly("distributed systems");
         assertThat(result.getStudyPlan()).contains("Kafka");
+        assertThat(result.getSource()).isEqualTo("ai");
     }
 
     @Test
@@ -81,6 +82,7 @@ class AiFeedbackServiceTest {
         AiFeedbackResponse result = service.generateFeedback(request(60, List.of(), List.of("locking")));
         assertThat(result).isNotNull();
         assertThat(result.getDiagnosis()).isNotBlank();
+        assertThat(result.getSource()).isEqualTo("rule");
     }
 
     @Test

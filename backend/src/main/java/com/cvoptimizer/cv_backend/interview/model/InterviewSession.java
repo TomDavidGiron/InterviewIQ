@@ -1,6 +1,7 @@
 package com.cvoptimizer.cv_backend.interview.model;
 
 import com.cvoptimizer.cv_backend.interview.agent.model.AgentAction;
+import com.cvoptimizer.cv_backend.interview.dto.InterviewSummaryResponse;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -54,6 +55,9 @@ public class InterviewSession {
     private String targetSeniorityHint;
     private String targetDomainHint;
     private boolean generatedQuestionsUsed;
+
+    // AI summary of a finished session, kept so repeat views don't call OpenAI again
+    private InterviewSummaryResponse cachedSummary;
 
     public InterviewSession() {
     }
@@ -324,6 +328,14 @@ public class InterviewSession {
 
     public void setGeneratedQuestionsUsed(boolean generatedQuestionsUsed) {
         this.generatedQuestionsUsed = generatedQuestionsUsed;
+    }
+
+    public InterviewSummaryResponse getCachedSummary() {
+        return cachedSummary;
+    }
+
+    public void setCachedSummary(InterviewSummaryResponse cachedSummary) {
+        this.cachedSummary = cachedSummary;
     }
     public long getCreatedAtEpochMs() {
         return createdAtEpochMs;

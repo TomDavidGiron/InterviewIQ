@@ -18,6 +18,7 @@ import com.cvoptimizer.cv_backend.service.JobSkillExtractorService;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 @Service
@@ -293,6 +294,11 @@ public class InterviewEngineService {
             throw new IllegalArgumentException("Session not found: " + sessionId);
         }
 
+        boolean finished = session.getStatus() != InterviewStatus.IN_PROGRESS;
+        if (finished && session.getCachedSummary() != null) {
+            return session.getCachedSummary();
+        }
+
         int scoreSoFar = session.getScore();
         int maxScoreSoFar = session.getTotalPossibleScore();
         int percent = calcPercent(scoreSoFar, maxScoreSoFar);
@@ -370,11 +376,18 @@ public class InterviewEngineService {
             summary.setWeaknesses(mergeOrderedLists(summary.getWeaknesses(), aiFeedback.getWeaknesses()));
             summary.setStudyPlan(aiFeedback.getStudyPlan());
             summary.setFeedbackSummary(aiFeedback.getFeedbackSummary());
-            summary.setFeedbackSource("ai");
+            summary.setFeedbackSource("rule".equals(aiFeedback.getSource()) ? "rule" : "ai");
         } catch (Exception e) {
             summary.setStudyPlan(String.join("\n", recs));
             summary.setFeedbackSummary(diagnosis.getOverallAssessment());
             summary.setFeedbackSource("rule");
+        }
+
+        // A finished session's result can't change, so keep the AI summary. Rule-based
+        // fallbacks aren't cached, so a later view can still get AI feedback once it's available.
+        if (finished && "ai".equals(summary.getFeedbackSource())) {
+            session.setCachedSummary(summary);
+            store.put(session);
         }
 
         return summary;
@@ -456,7 +469,8 @@ public class InterviewEngineService {
 
             int insertIndex = session.getCurrentIndex() + 1;
             session.getQuestions().add(insertIndex, followUp);
-            // Do NOT advance currentIndex here — the normal increment at line ~576 will move into the follow-up next call
+            // Advance onto the follow-up so the next answer is evaluated against it, not the question just answered
+            session.setCurrentIndex(insertIndex);
             session.setFollowUpCount(session.getFollowUpCount() + 1);
 
             return new InterviewAnswerResponse(
@@ -678,15 +692,14 @@ public class InterviewEngineService {
                 .toList();
 
         if (!exact.isEmpty()) {
-            return exact.get(0);
+            return pickRandom(exact);
         }
 
-        return bank.stream()
+        return pickRandom(bank.stream()
                 .filter(Objects::nonNull)
                 .filter(q -> q.getTags() != null && q.getTags().contains(topic))
                 .filter(q -> q.getId() != null && !alreadyAskedIds.contains(q.getId()))
-                .findFirst()
-                .orElse(null);
+                .toList());
     }
 
     private InterviewQuestion findQuestionForDifficulty(InterviewSession session,
@@ -702,16 +715,16 @@ public class InterviewEngineService {
                 .filter(q -> hasAnyPreferredTag(q, preferredTags))
                 .toList();
 
-        if (!matchingPreferred.isEmpty()) {
-            return matchingPreferred.get(0);
-        }
+        // No same-topic question at this difficulty: return null so the caller keeps the planned
+        // next question, instead of jumping to an unrelated topic just to honour the difficulty.
+        return pickRandom(matchingPreferred);
+    }
 
-        return bank.stream()
-                .filter(Objects::nonNull)
-                .filter(q -> q.getId() != null && !alreadyAskedIds.contains(q.getId()))
-                .filter(q -> estimateDifficulty(q) == difficulty)
-                .findFirst()
-                .orElse(null);
+    private InterviewQuestion pickRandom(List<InterviewQuestion> candidates) {
+        if (candidates == null || candidates.isEmpty()) {
+            return null;
+        }
+        return candidates.get(ThreadLocalRandom.current().nextInt(candidates.size()));
     }
 
     private Set<String> collectAskedIds(InterviewSession session) {
@@ -1236,7 +1249,7 @@ public class InterviewEngineService {
         if (text == null) {
             return "";
         }
-        String cleaned = text.replaceAll("\s+", " ").trim();
+        String cleaned = text.replaceAll("\\s+", " ").trim();
         if (cleaned.length() <= 42) {
             return cleaned;
         }
