@@ -67,17 +67,20 @@ public class JobScraperRouter {
         return result;
     }
 
-    private boolean isInvalid(ScraperResult result) {
+    // Scrapers signal failure with a "... Scraper Failed" title and an "Error: ..." description.
+    // Match those markers exactly — a real posting can legitimately mention "error handling".
+    boolean isInvalid(ScraperResult result) {
         if (result == null || result.getDescription() == null) return true;
 
         String desc = result.getDescription().toLowerCase().trim();
         String title = result.getTitle() != null ? result.getTitle().toLowerCase().trim() : "";
 
         return desc.isBlank()
-                || desc.contains("error")
-                || desc.contains("no description")
-                || desc.contains("placeholder")
+                || desc.startsWith("error:")
+                || desc.startsWith("no description")
+                || desc.equals("placeholder")
                 || desc.contains("listing detected")
+                || title.endsWith("scraper failed")
                 || title.contains("listing detected")
                 || title.contains("listing page fallback");
     }
