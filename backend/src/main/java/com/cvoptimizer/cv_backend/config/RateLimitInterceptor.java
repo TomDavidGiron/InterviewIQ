@@ -25,6 +25,13 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         String ip = resolveIp(request);
+        // TEMPORARY diagnostic to see how Railway forwards the client IP — remove once the limiter is fixed
+        System.out.println("[RATE_LIMIT_DEBUG] remoteAddr=" + request.getRemoteAddr()
+                + " xff=" + request.getHeader("X-Forwarded-For")
+                + " xRealIp=" + request.getHeader("X-Real-IP")
+                + " forwarded=" + request.getHeader("Forwarded")
+                + " envoyExternal=" + request.getHeader("X-Envoy-External-Address")
+                + " resolvedKey=" + ip);
         if (buckets.size() > MAX_TRACKED_CLIENTS) {
             buckets.clear(); // crude bound on memory; briefly resets everyone's limit
         }
