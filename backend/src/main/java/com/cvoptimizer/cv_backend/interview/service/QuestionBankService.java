@@ -22,7 +22,24 @@ public class QuestionBankService {
         this.objectMapper = objectMapper;
     }
 
+    // Questions only change when QuestionDbSeeder runs at startup, so keep the mapped bank in memory
+    // instead of reloading ~1000 rows on every topic list, interview start and agent decision.
+    private volatile List<InterviewQuestion> cachedBank;
+
     public List<InterviewQuestion> getAllFromDatabase() {
+        List<InterviewQuestion> bank = cachedBank;
+        if (bank == null) {
+            bank = loadFromDatabase();
+            cachedBank = bank;
+        }
+        return bank;
+    }
+
+    public void invalidateCache() {
+        cachedBank = null;
+    }
+
+    private List<InterviewQuestion> loadFromDatabase() {
         List<QuestionEntity> entities = questionRepository.findByStatus("ACTIVE");
         List<InterviewQuestion> result = new ArrayList<>(entities.size());
         for (QuestionEntity e : entities) {
@@ -32,7 +49,7 @@ public class QuestionBankService {
                 System.err.println("[QuestionBankService] Skipping question " + e.getId() + ": " + ex.getMessage());
             }
         }
-        return result;
+        return List.copyOf(result);
     }
 
     private InterviewQuestion toInterviewQuestion(QuestionEntity e) throws Exception {

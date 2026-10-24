@@ -60,6 +60,8 @@ public class QuestionDbSeeder implements ApplicationRunner {
             }
         }
 
+        // The web server is already accepting requests while this runs, so drop any partial bank cached mid-seed
+        questionBankService.invalidateCache();
         System.out.println("[QuestionDbSeeder] Seeded " + saved + " questions. Skipped " + skipped + " (duplicates or errors).");
     }
 
