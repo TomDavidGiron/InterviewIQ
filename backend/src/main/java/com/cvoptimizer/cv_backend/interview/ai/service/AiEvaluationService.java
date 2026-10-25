@@ -55,7 +55,13 @@ public class AiEvaluationService {
                 return Optional.empty();
             }
 
-            AiEvaluationResponse parsed = objectMapper.readValue(rawText, AiEvaluationResponse.class);
+            AiEvaluationResponse parsed;
+            try {
+                parsed = objectMapper.readValue(rawText, AiEvaluationResponse.class);
+            } catch (JsonProcessingException e) {
+                System.err.println("[AI_EVAL] Unparseable model output (" + rawText.length() + " chars): " + preview(rawText));
+                throw e;
+            }
             normalize(parsed);
             return Optional.of(parsed);
         } catch (RestClientException | JsonProcessingException e) {
@@ -97,6 +103,7 @@ public class AiEvaluationService {
         );
 
         JsonNode root = objectMapper.readTree(response.getBody());
+        logIfIncomplete(root);
 
         JsonNode outputText = root.path("output_text");
         if (!outputText.isMissingNode() && !outputText.isNull() && !outputText.asText().isBlank()) {
@@ -122,6 +129,22 @@ public class AiEvaluationService {
         }
 
         return null;
+    }
+
+    // The Responses API reports status "incomplete" (with a reason such as max_output_tokens)
+    // when the model stopped early, which otherwise only shows up later as a JSON parse error.
+    private void logIfIncomplete(JsonNode root) {
+        String status = root.path("status").asText("");
+        if (!status.isEmpty() && !"completed".equals(status)) {
+            System.err.println("[AI_EVAL] OpenAI response status=" + status
+                    + " incomplete_details=" + root.path("incomplete_details")
+                    + " usage=" + root.path("usage"));
+        }
+    }
+
+    private String preview(String text) {
+        String flat = text.replace("\n", "\\n").replace("\r", "\\r");
+        return flat.length() <= 160 ? flat : flat.substring(0, 160) + "...";
     }
 
     private Map<String, Object> buildResponseSchema() {

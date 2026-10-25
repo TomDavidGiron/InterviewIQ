@@ -45,7 +45,13 @@ public class AiFeedbackService {
             try {
                 String rawText = callOpenAi(request);
                 if (rawText != null && !rawText.isBlank()) {
-                    AiFeedbackResponse parsed = objectMapper.readValue(rawText, AiFeedbackResponse.class);
+                    AiFeedbackResponse parsed;
+                    try {
+                        parsed = objectMapper.readValue(rawText, AiFeedbackResponse.class);
+                    } catch (JsonProcessingException e) {
+                        System.err.println("[AI_FEEDBACK] Unparseable model output (" + rawText.length() + " chars): " + preview(rawText));
+                        throw e;
+                    }
                     return withSource(normalize(parsed, request), "ai");
                 }
             } catch (RestClientException | JsonProcessingException e) {
@@ -54,6 +60,22 @@ public class AiFeedbackService {
         }
 
         return withSource(fallbackFeedback(request), "rule");
+    }
+
+    // The Responses API reports status "incomplete" (with a reason such as max_output_tokens)
+    // when the model stopped early, which otherwise only shows up later as a JSON parse error.
+    private void logIfIncomplete(JsonNode root) {
+        String status = root.path("status").asText("");
+        if (!status.isEmpty() && !"completed".equals(status)) {
+            System.err.println("[AI_FEEDBACK] OpenAI response status=" + status
+                    + " incomplete_details=" + root.path("incomplete_details")
+                    + " usage=" + root.path("usage"));
+        }
+    }
+
+    private String preview(String text) {
+        String flat = text.replace("\n", "\\n").replace("\r", "\\r");
+        return flat.length() <= 160 ? flat : flat.substring(0, 160) + "...";
     }
 
     private AiFeedbackResponse withSource(AiFeedbackResponse response, String source) {
@@ -94,6 +116,7 @@ public class AiFeedbackService {
         );
 
         JsonNode root = objectMapper.readTree(response.getBody());
+        logIfIncomplete(root);
         JsonNode outputText = root.path("output_text");
         if (!outputText.isMissingNode() && !outputText.isNull() && !outputText.asText().isBlank()) {
             return outputText.asText();
