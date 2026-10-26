@@ -9,8 +9,9 @@ public class RagProperties {
 
     private int embeddingDimension = 1536;
     private int searchDefaultLimit = 5;
+    // Cosine similarity floor; text-embedding-3-small scores unrelated text roughly 0.0–0.25
+    private double searchMinSimilarity = 0.30;
     private boolean bootstrapEnabled = true;
-    private String bootstrapSource = "question_bank";
 
     public int getEmbeddingDimension() {
         return embeddingDimension;
@@ -36,11 +37,11 @@ public class RagProperties {
         this.bootstrapEnabled = bootstrapEnabled;
     }
 
-    public String getBootstrapSource() {
-        return bootstrapSource;
+    public double getSearchMinSimilarity() {
+        return searchMinSimilarity;
     }
 
-    public void setBootstrapSource(String bootstrapSource) {
-        this.bootstrapSource = bootstrapSource;
+    public void setSearchMinSimilarity(double searchMinSimilarity) {
+        this.searchMinSimilarity = searchMinSimilarity;
     }
 }

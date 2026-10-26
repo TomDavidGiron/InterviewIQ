@@ -40,6 +40,10 @@ public class AiEvaluationService {
         this.restTemplate = restTemplate;
     }
 
+    public boolean isConfigured() {
+        return properties.isConfigured();
+    }
+
     public Optional<AiEvaluationResponse> evaluate(AiEvaluationRequest request) {
         if (request == null || request.getUserAnswer() == null || request.getUserAnswer().isBlank()) {
             return Optional.empty();

@@ -55,25 +55,25 @@ class RagServiceTest {
 
         KnowledgeChunk chunk = new KnowledgeChunk();
         chunk.setContent("A HashMap stores key-value pairs using a hash table.");
-        when(repository.searchSimilar(fakeEmbedding, 5)).thenReturn(List.of(chunk));
+        when(repository.searchSimilar(fakeEmbedding, 15)).thenReturn(List.of(chunk));
 
         List<KnowledgeChunk> result = service.retrieveRelevantChunks("What is a HashMap?", null);
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getContent()).contains("HashMap");
         verify(embeddingService).embed("What is a HashMap?");
-        verify(repository).searchSimilar(fakeEmbedding, 5);
+        verify(repository).searchSimilar(fakeEmbedding, 15);
     }
 
     @Test
     void retrieveRelevantChunks_customLimit_usedInsteadOfDefault() {
         when(embeddingService.isConfigured()).thenReturn(true);
         when(embeddingService.embed(any())).thenReturn(new float[]{0.5f});
-        when(repository.searchSimilar(any(), eq(3))).thenReturn(List.of());
+        when(repository.searchSimilar(any(), eq(9))).thenReturn(List.of());
 
         service.retrieveRelevantChunks("concurrency", 3);
 
-        verify(repository).searchSimilar(any(), eq(3));
+        verify(repository).searchSimilar(any(), eq(9));
         verify(ragProperties, never()).getSearchDefaultLimit();
     }
 
@@ -95,6 +95,42 @@ class RagServiceTest {
                 "Transactions ensure ACID properties.",
                 "Rollback undoes uncommitted changes."
         );
+    }
+
+    @Test
+    void retrieveRelevantChunks_dropsChunksBelowSimilarityFloor() {
+        when(embeddingService.isConfigured()).thenReturn(true);
+        when(ragProperties.getSearchMinSimilarity()).thenReturn(0.30);
+        when(embeddingService.embed(any())).thenReturn(new float[]{0.1f});
+        when(repository.searchSimilar(any(), anyInt())).thenReturn(List.of(
+                chunk("relevant", 0.62, "sql"),
+                chunk("unrelated", 0.12, "css")));
+
+        List<KnowledgeChunk> result = service.retrieveRelevantChunks("What is an index?", List.of("sql"), 3);
+
+        assertThat(result).extracting(KnowledgeChunk::getContent).containsExactly("relevant");
+    }
+
+    @Test
+    void retrieveRelevantChunks_prefersChunksTaggedWithTheQuestionTopic() {
+        when(embeddingService.isConfigured()).thenReturn(true);
+        when(embeddingService.embed(any())).thenReturn(new float[]{0.1f});
+        when(repository.searchSimilar(any(), anyInt())).thenReturn(List.of(
+                chunk("java-locks", 0.70, "java"),
+                chunk("sql-locks-1", 0.65, "sql"),
+                chunk("sql-locks-2", 0.60, "SQL")));
+
+        List<KnowledgeChunk> result = service.retrieveRelevantChunks("Explain row locking", List.of("sql"), 2);
+
+        assertThat(result).extracting(KnowledgeChunk::getContent).containsExactly("sql-locks-1", "sql-locks-2");
+    }
+
+    private KnowledgeChunk chunk(String content, double similarity, String tag) {
+        KnowledgeChunk chunk = new KnowledgeChunk();
+        chunk.setContent(content);
+        chunk.setSimilarity(similarity);
+        chunk.setTags(List.of(tag));
+        return chunk;
     }
 
     @Test

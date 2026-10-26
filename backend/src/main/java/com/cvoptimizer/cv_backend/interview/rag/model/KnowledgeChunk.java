@@ -1,5 +1,7 @@
 package com.cvoptimizer.cv_backend.interview.rag.model;
 
+import java.util.List;
+
 public class KnowledgeChunk {
 
     private Long id;
@@ -11,6 +13,7 @@ public class KnowledgeChunk {
     private String sourceType;
     private String metadataJson;
     private double similarity;
+    private List<String> tags = List.of();
 
     public KnowledgeChunk() {
     }
@@ -107,5 +110,13 @@ public class KnowledgeChunk {
 
     public void setSimilarity(double similarity) {
         this.similarity = similarity;
+    }
+
+    public List<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(List<String> tags) {
+        this.tags = tags == null ? List.of() : tags;
     }
 }

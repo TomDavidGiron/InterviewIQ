@@ -57,6 +57,8 @@ public class AiEvaluationPromptTemplate {
                 - missingConcepts: only truly absent concepts, max 3 items
                 - strengths: what the candidate got right, at least 1 item if score > 0
                 - feedback: 1-2 sentences, encouraging, tells them what to study next
+                - REFERENCE_CONTEXT is background material: use it to check whether the answer is technically
+                  correct, but do not penalize the candidate for omitting details the question did not ask for
                 """.formatted(question, concepts, answer, ragContext);
     }
 

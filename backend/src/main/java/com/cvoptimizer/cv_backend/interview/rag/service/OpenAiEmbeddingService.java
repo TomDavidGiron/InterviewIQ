@@ -12,6 +12,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -53,6 +54,55 @@ public class OpenAiEmbeddingService implements EmbeddingService {
         }
 
         return hashEmbed(text);
+    }
+
+    @Override
+    public String modelName() {
+        return EMBEDDING_MODEL;
+    }
+
+    @Override
+    public List<float[]> embedBatch(List<String> texts) {
+        if (texts == null || texts.isEmpty()) {
+            return List.of();
+        }
+        if (!aiProperties.isConfigured()) {
+            throw new IllegalStateException("OpenAI API key is not configured");
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(aiProperties.getApiKey());
+
+        Map<String, Object> payload = Map.of("model", EMBEDDING_MODEL, "input", texts);
+        String response = restTemplate.postForObject(EMBEDDINGS_URL, new HttpEntity<>(payload, headers), String.class);
+
+        try {
+            JsonNode data = objectMapper.readTree(response).path("data");
+            float[][] vectors = new float[texts.size()][];
+            for (JsonNode item : data) {
+                // Each result carries its input index; don't rely on response order
+                vectors[item.path("index").asInt()] = toVector(item.path("embedding"));
+            }
+            for (int i = 0; i < vectors.length; i++) {
+                if (vectors[i] == null) {
+                    throw new IllegalStateException("Embedding response is missing input " + i);
+                }
+            }
+            return List.of(vectors);
+        } catch (IllegalStateException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to parse batch embedding response", e);
+        }
+    }
+
+    private float[] toVector(JsonNode embeddingNode) {
+        float[] vector = new float[embeddingNode.size()];
+        for (int i = 0; i < embeddingNode.size(); i++) {
+            vector[i] = (float) embeddingNode.get(i).asDouble();
+        }
+        return vector;
     }
 
     private float[] callOpenAiEmbedding(String text) {

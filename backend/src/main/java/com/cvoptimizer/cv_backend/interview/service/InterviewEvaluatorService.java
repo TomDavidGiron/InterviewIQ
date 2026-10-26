@@ -80,7 +80,10 @@ public class InterviewEvaluatorService {
             int maxPoints,
             KeywordMatchResult keywordResult
     ) {
-        List<String> ragContext = ragService.retrieveContext(question.getText(), RAG_LIMIT);
+        List<String> ragContext = ragService.retrieveContext(question.getText(), question.getTags(), RAG_LIMIT);
+        if (aiEvaluationService.isConfigured()) {
+            System.out.println("[RAG] question=" + question.getId() + " reference chunks=" + ragContext.size());
+        }
 
         Optional<AiEvaluationResponse> aiResult = aiEvaluationService.evaluate(
                 new AiEvaluationRequest(
